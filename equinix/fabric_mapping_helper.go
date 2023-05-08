@@ -230,6 +230,31 @@ func locationToFabric(locationList []interface{}) v4.SimplifiedLocation {
 	return sl
 }
 
+func locationToFabricGateway(locationList []interface{}) v4.SimplifiedLocationWithoutIbx {
+	sl := v4.SimplifiedLocationWithoutIbx{}
+	for _, ll := range locationList {
+		llMap := ll.(map[string]interface{})
+		metroName := llMap["metro_name"]
+		var metroNamestr string
+		if metroName != nil {
+			metroNamestr = metroName.(string)
+		}
+		mc := llMap["metro_code"].(string)
+		sl = v4.SimplifiedLocationWithoutIbx{MetroName: metroNamestr, MetroCode: mc}
+	}
+	return sl
+}
+
+func packageToFabricGateway(packageList []interface{}) v4.FabricGatewayPackageType {
+	p := v4.FabricGatewayPackageType{}
+	for _, pl := range packageList {
+		plMap := pl.(map[string]interface{})
+		code := plMap["code"].(string)
+		p = v4.FabricGatewayPackageType{Code: code}
+	}
+	return p
+}
+
 func accountToTerra(account *v4.SimplifiedAccount) *schema.Set {
 	if account == nil {
 		return nil
@@ -426,6 +451,22 @@ func locationToTerra(location *v4.SimplifiedLocation) *schema.Set {
 	return locationSet
 }
 
+func locationFGToTerra(location *v4.SimplifiedLocationWithoutIbx) *schema.Set {
+	locations := []*v4.SimplifiedLocationWithoutIbx{location}
+	mappedLocations := make([]interface{}, len(locations))
+	for i, location := range locations {
+		mappedLocations[i] = map[string]interface{}{
+			"region":     location.Region,
+			"metro_name": location.MetroName,
+			"metro_code": location.MetroCode,
+		}
+	}
+	locationSet := schema.NewSet(
+		schema.HashResource(createLocationRes),
+		mappedLocations,
+	)
+	return locationSet
+}
 func serviceTokenToTerra(serviceToken *v4.ServiceToken) *schema.Set {
 	if serviceToken == nil {
 		return nil
@@ -497,6 +538,24 @@ func fabricGatewayToTerra(virtualGateway *v4.FabricGateway) *schema.Set {
 		schema.HashResource(createGatewayProjectSchRes),
 		mappedvirtualGateways)
 	return linkedProtocolSet
+}
+
+func fabricGatewayPackageToTerra(packageType *v4.FabricGatewayPackageType) *schema.Set {
+	if packageType == nil {
+		return nil
+	}
+	packageTypes := []*v4.FabricGatewayPackageType{packageType}
+	mappedPackages := make([]interface{}, len(packageTypes))
+	for i, packageType := range packageTypes {
+		mappedPackages[i] = map[string]interface{}{
+			"code": packageType.Code,
+		}
+	}
+	packageSet := schema.NewSet(
+		schema.HashResource(createLocationRes),
+		mappedPackages,
+	)
+	return packageSet
 }
 
 func projectToTerra(project *v4.Project) *schema.Set {
