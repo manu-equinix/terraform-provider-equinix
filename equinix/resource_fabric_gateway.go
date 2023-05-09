@@ -23,12 +23,12 @@ func resourceFabricGateway() *schema.Resource {
 		},
 		ReadContext:   resourceFabricGatewayRead,
 		CreateContext: resourceFabricGatewayCreate,
-		//UpdateContext: resourceFabricGatewayUpdate,
+		UpdateContext: resourceFabricGatewayUpdate,
 		DeleteContext: resourceFabricGatewayDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
-		Schema: createFabricConnectionResourceSchema(),
+		Schema: createFabricGatewayResourceSchema(),
 
 		Description: "Fabric V4 API compatible resource allows creation and management of Equinix Fabric connection\n\n~> **Note** Equinix Fabric v4 resources and datasources are currently in Beta. The interfaces related to `equinix_fabric_` resources and datasources may change ahead of general availability. Please, do not hesitate to report any problems that you experience by opening a new [issue](https://github.com/equinix/terraform-provider-equinix/issues/new?template=bug.md)",
 	}
@@ -39,8 +39,6 @@ func resourceFabricGatewayCreate(ctx context.Context, d *schema.ResourceData, me
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
 	schemaNotifications := d.Get("notifications").([]interface{})
 	notifications := notificationToFabric(schemaNotifications)
-	//schemaRedundancy := d.Get("redundancy").(*schema.Set).List()
-	//red := redundancyToFabric(schemaRedundancy)
 	schemaOrder := d.Get("order").(*schema.Set).List()
 	order := orderToFabric(schemaOrder)
 	schemaLocation := d.Get("order").(*schema.Set).List()
@@ -67,7 +65,7 @@ func resourceFabricGatewayCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.SetId(fg.Uuid)
 
-	if err = waitUntilFGIsProvisioned(d.Id(), meta, ctx); err != nil {
+	if _, err = waitUntilFGIsProvisioned(d.Id(), meta, ctx); err != nil {
 		return diag.Errorf("error waiting for FG (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -114,39 +112,39 @@ func setFabricGatewayMap(d *schema.ResourceData, fg v4.FabricGateway) diag.Diagn
 }
 
 // TO-DO FG Update implementation
-//func resourceFabricGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	client := meta.(*Config).fabricClient
-//	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
-//	err := waitUntilFGIsProvisioned(d.Id(), meta, ctx)
-//	if err != nil {
-//		if !strings.Contains(err.Error(), "500") {
-//			d.SetId("")
-//		}
-//		return diag.Errorf("either timed out or errored out while fetching connection for uuid %s and error %v", d.Id(), err)
-//	}
-//	// TO-DO
-//	update, err := getFGUpdateRequest(dbConn, d)
-//	if err != nil {
-//		return diag.FromErr(err)
-//	}
-//	updates := []v4.ConnectionChangeOperation{update}
-//	_, res, err := client.ConnectionsApi.UpdateConnectionByUuid(ctx, updates, d.Id())
-//	if err != nil {
-//		return diag.FromErr(fmt.Errorf("error response for the connection update, response %v, error %v", res, err))
-//	}
-//	updatedConn := v4.FabricGateway{}
-//	updatedConn, err = waitForFGUpdateCompletion(d.Id(), meta, ctx)
-//
-//	if err != nil {
-//		if !strings.Contains(err.Error(), "500") {
-//			d.SetId("")
-//		}
-//		return diag.FromErr(fmt.Errorf("errored while waiting for successful connection update, response %v, error %v", res, err))
-//	}
-//
-//	d.SetId(updatedConn.Uuid)
-//	return setFabricMap(d, updatedConn)
-//}
+func resourceFabricGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	client := meta.(*Config).fabricClient
+	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
+	dbConn, err := waitUntilFGIsProvisioned(d.Id(), meta, ctx)
+	if err != nil {
+		if !strings.Contains(err.Error(), "500") {
+			d.SetId("")
+		}
+		return diag.Errorf("either timed out or errored out while fetching connection for uuid %s and error %v", d.Id(), err)
+	}
+	// TO-DO
+	update, err := getFabricGatewayUpdateRequest(dbConn, d)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	updates := []v4.FabricGatewayChangeOperation{update}
+	_, res, err := client.GatewaysApi.UpdateGatewayByUuid(ctx, updates, d.Id())
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("error response for the connection update, response %v, error %v", res, err))
+	}
+	updateFg := v4.FabricGateway{}
+	updateFg, err = waitForFGUpdateCompletion(d.Id(), meta, ctx)
+
+	if err != nil {
+		if !strings.Contains(err.Error(), "500") {
+			d.SetId("")
+		}
+		return diag.FromErr(fmt.Errorf("errored while waiting for successful connection update, response %v, error %v", res, err))
+	}
+
+	d.SetId(updateFg.Uuid)
+	return setFabricGatewayMap(d, updateFg)
+}
 
 func waitForFGUpdateCompletion(uuid string, meta interface{}, ctx context.Context) (v4.FabricGateway, error) {
 	log.Printf("Waiting for FG update to complete, uuid %s", uuid)
@@ -178,7 +176,7 @@ func waitForFGUpdateCompletion(uuid string, meta interface{}, ctx context.Contex
 	return dbConn, err
 }
 
-func waitUntilFGIsProvisioned(uuid string, meta interface{}, ctx context.Context) error {
+func waitUntilFGIsProvisioned(uuid string, meta interface{}, ctx context.Context) (v4.FabricGateway, error) {
 	log.Printf("Waiting for FG to be provisioned, uuid %s", uuid)
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
@@ -201,9 +199,13 @@ func waitUntilFGIsProvisioned(uuid string, meta interface{}, ctx context.Context
 		MinTimeout: 30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	inter, err := stateConf.WaitForStateContext(ctx)
+	dbConn := v4.FabricGateway{}
 
-	return err
+	if err == nil {
+		dbConn = inter.(v4.FabricGateway)
+	}
+	return dbConn, err
 }
 
 func resourceFabricGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

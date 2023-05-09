@@ -805,6 +805,26 @@ func getUpdateRequest(conn v4.Connection, d *schema.ResourceData) (v4.Connection
 	return changeOps, nil
 }
 
+func getFabricGatewayUpdateRequest(conn v4.FabricGateway, d *schema.ResourceData) (v4.FabricGatewayChangeOperation, error) {
+	changeOps := v4.FabricGatewayChangeOperation{}
+	existingName := conn.Name
+	existingPackage := conn.Package_.Code
+	updateNameVal := d.Get("name")
+	updatePackageVal := d.Get("conn.Package_.Code")
+
+	log.Printf("existing name %s, existing Package %s, Update Name Request %s, Update Package Request %s ",
+		existingName, existingPackage, updateNameVal, updatePackageVal)
+
+	if existingName != updateNameVal {
+		changeOps = v4.FabricGatewayChangeOperation{Op: "replace", Path: "/name", Value: &updateNameVal}
+	} else if existingPackage != updatePackageVal {
+		changeOps = v4.FabricGatewayChangeOperation{Op: "replace", Path: "/package", Value: &updatePackageVal}
+	} else {
+		return changeOps, fmt.Errorf("nothing to update for the connection %s", existingName)
+	}
+	return changeOps, nil
+}
+
 const allowed_charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$&@"
 

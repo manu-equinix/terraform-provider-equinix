@@ -1,34 +1,12 @@
 package equinix
 
-import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+import (
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
 
-func readPackageSch() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"type": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Type",
-		},
-		"href": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Unique Resource Identifier",
-		},
-		"code": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Fabric Gateway package code",
-		},
-	}
-}
 
-func readFabricGatewayResourceSchema() map[string]*schema.Schema {
+func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"uuid": {
-			Type:        schema.TypeString,
-			Optional:    true,
-			Description: "Equinix-assigned Fabric Gateway identifier",
-		},
 		"href": {
 			Type:        schema.TypeString,
 			Computed:    true,
