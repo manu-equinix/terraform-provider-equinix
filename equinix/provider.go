@@ -107,7 +107,7 @@ func Provider() *schema.Provider {
 			"equinix_ecx_l2_sellerprofile":       dataSourceECXL2SellerProfile(),
 			"equinix_ecx_l2_sellerprofiles":      dataSourceECXL2SellerProfiles(),
 			"equinix_fabric_connection":          dataSourceFabricConnection(),
-			"equinix_fabric-gateway":             dataSourceFabricGateway(),
+			"equinix_fabric_gateway":             dataSourceFabricGateway(),
 			"equinix_fabric_port":                dataSourceFabricPort(),
 			"equinix_fabric_ports":               dataSourceFabricGetPortsByName(),
 			"equinix_fabric_service_profile":     dataSourceFabricServiceProfileReadByUuid(),

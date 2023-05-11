@@ -2,8 +2,22 @@ package equinix
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
+func createPackageSch() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"code": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Fabric Gateway package code",
+		},
+	}
+}
+
+var createPackageRes = &schema.Resource{
+	Schema: createAccountSch(),
+}
 
 func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
@@ -14,12 +28,12 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 		},
 		"name": {
 			Type:        schema.TypeString,
-			Computed:    true,
+			Required:    true,
 			Description: "Fabric Gateway name. An alpha-numeric 24 characters string which can include only hyphens and underscores",
 		},
 		"description": {
 			Type:        schema.TypeString,
-			Computed:    true,
+			Optional:    true,
 			Description: "Customer-provided Fabric Gateway description",
 		},
 		"state": {
@@ -32,72 +46,75 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 			Computed:    true,
 			Description: "Equinix ASN",
 		},
-		"bgp_ipv4_routes_count": {
-			Type:        schema.TypeInt,
-			Computed:    true,
-			Description: "",
-		},
-		"bgp_ipv6_routes_count": {
-			Type:        schema.TypeInt,
-			Computed:    true,
-			Description: "",
-		},
-		"connections_count": {
-			Type:        schema.TypeInt,
-			Computed:    true,
-			Description: "",
-		},
 		"package": {
 			Type:        schema.TypeSet,
+			Optional:    true,
 			Computed:    true,
-			Description: "Fabric Gateway package information",
+			Description: "Fabric Gateway location",
+			MaxItems:    1,
 			Elem: &schema.Resource{
-				Schema: readPackageSch(),
+				Schema: createPackageSch(),
 			},
 		},
 		"change_log": {
 			Type:        schema.TypeSet,
 			Computed:    true,
-			Description: "Captures Fabric Gateway lifecycle change information",
+			Description: "Captures connection lifecycle change information",
 			Elem: &schema.Resource{
-				Schema: readChangeLogSch(),
+				Schema: createChangeLogSch(),
 			},
 		},
 		"type": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Defines the Fabric Gateway type like XF_GATEWAY",
+			Type:         schema.TypeString,
+			Required:     true,
+			ValidateFunc: validation.StringInSlice([]string{"XF_GATEWAY"}, true),
+			Description:  "Defines the FG type like XF_GATEWAY",
 		},
 		"location": {
 			Type:        schema.TypeSet,
+			Optional:    true,
 			Computed:    true,
 			Description: "Fabric Gateway location",
+			MaxItems:    1,
 			Elem: &schema.Resource{
-				Schema: readLocationSch(),
+				Schema: createLocationSch(),
 			},
 		},
 		"project": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Description: "Project information",
+			Computed:    true,
+			Description: "Fabric Gateway location",
+			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: createGatewayProjectSch(),
 			},
 		},
 		"account": {
 			Type:        schema.TypeSet,
+			Optional:    true,
 			Computed:    true,
 			Description: "Customer account information that is associated with this connection",
+			MaxItems:    1,
 			Elem: &schema.Resource{
-				Schema: readAccountSch(),
+				Schema: createAccountSch(),
+			},
+		},
+		"order": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Order related to this connection information",
+			MaxItems:    1,
+			Elem: &schema.Resource{
+				Schema: createOrderSch(),
 			},
 		},
 		"notifications": {
 			Type:        schema.TypeList,
-			Computed:    true,
-			Description: "Preferences for notifications on Fabric Gateway configuration or status changes",
+			Required:    true,
+			Description: "Preferences for notifications on connection configuration or status changes",
 			Elem: &schema.Resource{
-				Schema: readNotificationSch(),
+				Schema: createNotificationSch(),
 			},
 		},
 	}

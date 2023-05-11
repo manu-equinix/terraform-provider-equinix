@@ -234,13 +234,13 @@ func locationToFabricGateway(locationList []interface{}) v4.SimplifiedLocationWi
 	sl := v4.SimplifiedLocationWithoutIbx{}
 	for _, ll := range locationList {
 		llMap := ll.(map[string]interface{})
-		metroName := llMap["metro_name"]
-		var metroNamestr string
-		if metroName != nil {
-			metroNamestr = metroName.(string)
-		}
+		//metroName := llMap["metro_name"]
+		//var metroNamestr string
+		//if metroName != nil {
+		//	metroNamestr = metroName.(string)
+		//}
 		mc := llMap["metro_code"].(string)
-		sl = v4.SimplifiedLocationWithoutIbx{MetroName: metroNamestr, MetroCode: mc}
+		sl = v4.SimplifiedLocationWithoutIbx{MetroCode: mc}
 	}
 	return sl
 }
@@ -467,6 +467,7 @@ func locationFGToTerra(location *v4.SimplifiedLocationWithoutIbx) *schema.Set {
 	)
 	return locationSet
 }
+
 func serviceTokenToTerra(serviceToken *v4.ServiceToken) *schema.Set {
 	if serviceToken == nil {
 		return nil
@@ -541,14 +542,11 @@ func fabricGatewayToTerra(virtualGateway *v4.FabricGateway) *schema.Set {
 }
 
 func fabricGatewayPackageToTerra(packageType *v4.FabricGatewayPackageType) *schema.Set {
-	if packageType == nil {
-		return nil
-	}
 	packageTypes := []*v4.FabricGatewayPackageType{packageType}
 	mappedPackages := make([]interface{}, len(packageTypes))
 	for i, packageType := range packageTypes {
 		mappedPackages[i] = map[string]interface{}{
-			"code": packageType.Code,
+			"code":     packageType.Code,
 		}
 	}
 	packageSet := schema.NewSet(
@@ -567,7 +565,6 @@ func projectToTerra(project *v4.Project) *schema.Set {
 	for _, project := range projects {
 		mappedProject := make(map[string]interface{})
 		mappedProject["project_id"] = project.ProjectId
-		//mappedProject["href"] = project.Href
 		mappedProjects = append(mappedProjects, mappedProject)
 	}
 	projectSet := schema.NewSet(

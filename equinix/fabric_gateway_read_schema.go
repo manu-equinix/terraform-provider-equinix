@@ -4,19 +4,9 @@ import "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 func readPackageSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"type": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Type",
-		},
-		"href": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Unique Resource Identifier",
-		},
 		"code": {
 			Type:        schema.TypeString,
-			Computed:    true,
+			Optional:    true,
 			Description: "Fabric Gateway package code",
 		},
 	}
@@ -103,15 +93,23 @@ func readFabricGatewayResourceSchema() map[string]*schema.Schema {
 			Optional:    true,
 			Description: "Project information",
 			Elem: &schema.Resource{
-				Schema: createGatewayProjectSch(),
+				Schema: readGatewayProjectSch(),
 			},
 		},
 		"account": {
 			Type:        schema.TypeSet,
-			Computed:    true,
+			Optional:    true,
 			Description: "Customer account information that is associated with this connection",
 			Elem: &schema.Resource{
 				Schema: readAccountSch(),
+			},
+		},
+		"order": {
+			Type:        schema.TypeSet,
+			Computed:    true,
+			Description: "Order related to this connection information",
+			Elem: &schema.Resource{
+				Schema: readOrderSch(),
 			},
 		},
 		"notifications": {

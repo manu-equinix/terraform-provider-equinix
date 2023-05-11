@@ -10,29 +10,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccFabricGatewayCreateConnection(t *testing.T) {
+func TestAccFabricGatewayCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: checkFabricGatewayDelete,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricGatewayCreateConfig("LAB"),
+				Config: testAccFabricGatewayCreateConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"equinix_fabric_gateway.test", "name", fmt.Sprint("fabric_gateway_tf_acc_test")),
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_gateway.test", "bandwidth", fmt.Sprint("50")),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccFabricGatewayCreateConfig("PRO"),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_gateway.test", "name", fmt.Sprint("fabric_gateway_tf_acc_test")),
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_gateway.test", "bandwidth", fmt.Sprint("100")),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -44,7 +32,7 @@ func checkFabricGatewayDelete(s *terraform.State) error {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, testAccProvider.Meta().(*Config).FabricAuthToken)
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "equinix_fabric_connection" {
+		if rs.Type != "equinix_fabric_gateway" {
 			continue
 		}
 		err := waitUntilFGDeprovisioned(rs.Primary.ID, testAccProvider.Meta(), ctx)
@@ -56,27 +44,49 @@ func checkFabricGatewayDelete(s *terraform.State) error {
 }
 
 // To-do: Add config
-func testAccFabricGatewayCreateConfig(packageCode string) string {
-	return fmt.Sprintf(`%s---`, packageCode)
+func testAccFabricGatewayCreateConfig() string {
+	return fmt.Sprint(`resource "equinix_fabric_gateway" "test"{
+        type = "XF_GATEWAY"
+        name = "fabric_gateway_tf_acc_test"
+        location{
+          metro_code  = "SV"
+        }
+		project{
+			project_id = "776847000642406"
+		}
+		package{
+	      code = "LAB"
+		}
+        order{
+        	purchase_order_number = "1-234567"
+       }
+       notifications{
+          type = "ALL"
+          emails = ["test@equinix.com","test1@equinix.com"]
+       }
+       account {
+        account_number = "202024"
+        }
+	}`)
 }
 
-func TestAccFabricGatewayReadConnection(t *testing.T) {
+func TestAccFabricGatewayRead(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricGatewayReadConnectionConfig(),
+				Config: testAccFabricGatewayReadConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.equinix_fabric_connection.test", "name", fmt.Sprint("fabric_tf_acc_test")),
+						"data.equinix_fabric_gateway.test", "name", fmt.Sprint("fabric_gateway_tf_acc_test")),
 				),
 			},
 		},
 	})
 }
 
-func testAccFabricGatewayReadConnectionConfig() string {
+func testAccFabricGatewayReadConfig() string {
 	return fmt.Sprint(`data "equinix_fabric_gateway" "test" {
 	uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
 	}`)
