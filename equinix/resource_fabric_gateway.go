@@ -89,20 +89,15 @@ func resourceFabricGatewayRead(ctx context.Context, d *schema.ResourceData, meta
 func setFabricGatewayMap(d *schema.ResourceData, fg v4.FabricGateway) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 	err := setMap(d, map[string]interface{}{
-		"name":               fg.Name,
-		"href":               fg.Href,
-		"type":               fg.Type_,
-		"state":              fg.State,
-		"equinixAsn":         fg.EquinixAsn,
-		"bgpIpv4RoutesCount": fg.BgpIpv4RoutesCount,
-		"bgpIpv6RoutesCount": fg.BgpIpv6RoutesCount,
-		"connectionsCount":   fg.ConnectionsCount,
-		"package":            fabricGatewayPackageToTerra(fg.Package_),
-		"location":           locationFGToTerra(fg.Location),
-		"change_log":         changeLogToTerra(fg.ChangeLog),
-		"notifications":      notificationToTerra(fg.Notifications),
-		"account":            accountToTerra(fg.Account),
-		"project":            projectToTerra(fg.Project),
+		"name":          fg.Name,
+		"href":          fg.Href,
+		"type":          fg.Type_,
+		"state":         fg.State,
+		"package":       fabricGatewayPackageToTerra(fg.Package_),
+		"location":      locationFGToTerra(fg.Location),
+		"change_log":    changeLogToTerra(fg.ChangeLog),
+		"notifications": notificationToTerra(fg.Notifications),
+		"project":       projectToTerra(fg.Project),
 	})
 	if err != nil {
 		return diag.FromErr(err)

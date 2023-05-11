@@ -17,11 +17,7 @@ func TestAccFabricGatewayCreate(t *testing.T) {
 		CheckDestroy: checkFabricGatewayDelete,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricGatewayCreateConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_acc_test")),
-				),
+				Config:             testAccFabricGatewayCreateConfig(),
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -75,6 +71,10 @@ func TestAccFabricGatewayRead(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFabricGatewayReadConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_acc_test")),
+				),
 			},
 		},
 	})
