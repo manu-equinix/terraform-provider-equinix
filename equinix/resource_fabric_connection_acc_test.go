@@ -71,11 +71,11 @@ func testAccFabricCreateEPLConnectionConfig(bandwidth int32) string {
 		access_point {
 			type = "COLO"
 				port {
-				uuid = "c4d9350e-77cd-7cdd-1ce0-306a5c00a600"
+				uuid = "c4d86b09-e9f3-9f39-20e0-306a5c00ab8b"
 				}
 				link_protocol {
 					type= "QINQ"
-					vlan_s_tag= 1976
+					vlan_s_tag= 2309
 				}
 			}
 		}
@@ -83,11 +83,11 @@ func testAccFabricCreateEPLConnectionConfig(bandwidth int32) string {
 		access_point {
 			type = "COLO"
 				port{
-				uuid = "c4d9350e-783c-83cd-1ce0-306a5c00a600"
+				uuid = "c4d86b09-ea04-a049-20e0-306a5c00ab8b"
 				}
 				link_protocol {
 					type= "QINQ"
-					vlan_s_tag= 3711
+					vlan_s_tag= 2310
 				}
 			location {
         		metro_code= "SV"

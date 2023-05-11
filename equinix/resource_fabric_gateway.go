@@ -41,10 +41,10 @@ func resourceFabricGatewayCreate(ctx context.Context, d *schema.ResourceData, me
 	notifications := notificationToFabric(schemaNotifications)
 	schemaOrder := d.Get("order").(*schema.Set).List()
 	order := orderToFabric(schemaOrder)
+	schemaAccount := d.Get("account").(*schema.Set).List()
+	account := accountToFabric(schemaAccount)
 	schemaLocation := d.Get("location").(*schema.Set).List()
 	location := locationToFabricGateway(schemaLocation)
-	projectReq := d.Get("project").(*schema.Set).List()
-	project := projectToFabric(projectReq)
 	schemaPackage := d.Get("package").(*schema.Set).List()
 	packages := packageToFabricGateway(schemaPackage)
 
@@ -55,7 +55,7 @@ func resourceFabricGatewayCreate(ctx context.Context, d *schema.ResourceData, me
 		Location:      &location,
 		Notifications: notifications,
 		Package_:      &packages,
-		Project:       &project,
+		Account:       &account,
 	}
 
 	fg, _, err := client.GatewaysApi.CreateGateway(ctx, createRequest)

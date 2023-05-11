@@ -230,6 +230,16 @@ func locationToFabric(locationList []interface{}) v4.SimplifiedLocation {
 	return sl
 }
 
+func accountToFabric(accountList []interface{}) v4.SimplifiedAccount {
+	sa := v4.SimplifiedAccount{}
+	for _, ll := range accountList {
+		llMap := ll.(map[string]interface{})
+		ac := llMap["account_number"].(int)
+		sa = v4.SimplifiedAccount{AccountNumber: int64(ac)}
+	}
+	return sa
+}
+
 func locationToFabricGateway(locationList []interface{}) v4.SimplifiedLocationWithoutIbx {
 	sl := v4.SimplifiedLocationWithoutIbx{}
 	for _, ll := range locationList {
@@ -546,7 +556,7 @@ func fabricGatewayPackageToTerra(packageType *v4.FabricGatewayPackageType) *sche
 	mappedPackages := make([]interface{}, len(packageTypes))
 	for i, packageType := range packageTypes {
 		mappedPackages[i] = map[string]interface{}{
-			"code":     packageType.Code,
+			"code": packageType.Code,
 		}
 	}
 	packageSet := schema.NewSet(

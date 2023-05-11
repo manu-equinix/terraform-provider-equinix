@@ -93,13 +93,13 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 		"account": {
 			Type:        schema.TypeSet,
 			Optional:    true,
-			Computed:    true,
 			Description: "Customer account information that is associated with this connection",
 			MaxItems:    1,
 			Elem: &schema.Resource{
 				Schema: createAccountSch(),
 			},
 		},
+
 		"order": {
 			Type:        schema.TypeSet,
 			Optional:    true,

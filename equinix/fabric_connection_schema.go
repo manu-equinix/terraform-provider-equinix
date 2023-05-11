@@ -306,6 +306,7 @@ func createConnectionSideAccessPointRes() *schema.Resource {
 			},
 			"account": {
 				Type:        schema.TypeSet,
+				Optional:    true,
 				Computed:    true,
 				Description: "Account",
 				Elem: &schema.Resource{
@@ -573,38 +574,8 @@ func createAccountSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"account_number": {
 			Type:        schema.TypeInt,
-			Computed:    true,
+			Optional:    true,
 			Description: "Account Number",
-		},
-		"account_name": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Account Name",
-		},
-		"org_id": {
-			Type:        schema.TypeInt,
-			Computed:    true,
-			Description: "Customer organization identifier",
-		},
-		"organization_name": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Customer organization name",
-		},
-		"global_org_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Global organization identifier",
-		},
-		"global_organization_name": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Global organization name",
-		},
-		"global_cust_id": {
-			Type:        schema.TypeString,
-			Computed:    true,
-			Description: "Global Customer organization identifier",
 		},
 	}
 }

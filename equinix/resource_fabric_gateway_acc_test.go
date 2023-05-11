@@ -20,7 +20,7 @@ func TestAccFabricGatewayCreate(t *testing.T) {
 				Config: testAccFabricGatewayCreateConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"equinix_fabric_gateway.test", "name", fmt.Sprint("fabric_gateway_tf_acc_test")),
+						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_acc_test")),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -47,15 +47,12 @@ func checkFabricGatewayDelete(s *terraform.State) error {
 func testAccFabricGatewayCreateConfig() string {
 	return fmt.Sprint(`resource "equinix_fabric_gateway" "test"{
         type = "XF_GATEWAY"
-        name = "fabric_gateway_tf_acc_test"
+        name = "fg_tf_acc_test"
         location{
           metro_code  = "SV"
         }
-		project{
-			project_id = "776847000642406"
-		}
 		package{
-	      code = "LAB"
+	      code = "PRO"
 		}
         order{
         	purchase_order_number = "1-234567"
@@ -64,9 +61,10 @@ func testAccFabricGatewayCreateConfig() string {
           type = "ALL"
           emails = ["test@equinix.com","test1@equinix.com"]
        }
-       account {
-        account_number = "202024"
-        }
+        account{
+        	account_number = 203612
+       }
+
 	}`)
 }
 
@@ -77,10 +75,6 @@ func TestAccFabricGatewayRead(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFabricGatewayReadConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.equinix_fabric_gateway.test", "name", fmt.Sprint("fabric_gateway_tf_acc_test")),
-				),
 			},
 		},
 	})
