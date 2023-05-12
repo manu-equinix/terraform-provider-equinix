@@ -19,6 +19,25 @@ var createPackageRes = &schema.Resource{
 	Schema: createAccountSch(),
 }
 
+var createFabricGatewayProjectSchRes = &schema.Resource{
+	Schema: createGatewayProjectSch(),
+}
+
+func createFabricGatewayProjectSch() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"project_id": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Project Id",
+		},
+		"href": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Unique Resource URL",
+		},
+	}
+}
+
 func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"href": {
@@ -72,8 +91,7 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 		},
 		"location": {
 			Type:        schema.TypeSet,
-			Optional:    true,
-			Computed:    true,
+			Required:    true,
 			Description: "Fabric Gateway location",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -82,12 +100,10 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 		},
 		"project": {
 			Type:        schema.TypeSet,
-			Optional:    true,
 			Computed:    true,
-			Description: "Fabric Gateway location",
-			MaxItems:    1,
+			Description: "Fabric Gateway project",
 			Elem: &schema.Resource{
-				Schema: createGatewayProjectSch(),
+				Schema: createFabricGatewayProjectSch(),
 			},
 		},
 		"account": {
@@ -99,7 +115,6 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 				Schema: createAccountSch(),
 			},
 		},
-
 		"order": {
 			Type:        schema.TypeSet,
 			Optional:    true,

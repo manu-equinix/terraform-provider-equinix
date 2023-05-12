@@ -98,7 +98,7 @@ func readFabricGatewayResourceSchema() map[string]*schema.Schema {
 		},
 		"account": {
 			Type:        schema.TypeSet,
-			Optional:    true,
+			Computed:    true,
 			Description: "Customer account information that is associated with this connection",
 			Elem: &schema.Resource{
 				Schema: readAccountSch(),

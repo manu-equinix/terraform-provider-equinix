@@ -57,10 +57,9 @@ func testAccFabricGatewayCreateConfig() string {
           type = "ALL"
           emails = ["test@equinix.com","test1@equinix.com"]
        }
-        account{
-        	account_number = 203612
-       }
-
+      account {
+        account_number = 203612
+ 	  }
 	}`)
 }
 

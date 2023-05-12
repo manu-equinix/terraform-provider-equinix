@@ -121,11 +121,11 @@ func projectToFabric(projectRequest []interface{}) v4.Project {
 	for _, pr := range projectRequest {
 		prMap := pr.(map[string]interface{})
 		projectId := prMap["project_id"].(string)
-		//href := prMap["href"].(string)
 		mappedPr = v4.Project{ProjectId: projectId}
 	}
 	return mappedPr
 }
+
 
 func notificationToFabric(schemaNotifications []interface{}) []v4.SimplifiedNotification {
 	if schemaNotifications == nil {
@@ -244,11 +244,6 @@ func locationToFabricGateway(locationList []interface{}) v4.SimplifiedLocationWi
 	sl := v4.SimplifiedLocationWithoutIbx{}
 	for _, ll := range locationList {
 		llMap := ll.(map[string]interface{})
-		//metroName := llMap["metro_name"]
-		//var metroNamestr string
-		//if metroName != nil {
-		//	metroNamestr = metroName.(string)
-		//}
 		mc := llMap["metro_code"].(string)
 		sl = v4.SimplifiedLocationWithoutIbx{MetroCode: mc}
 	}
@@ -263,6 +258,19 @@ func packageToFabricGateway(packageList []interface{}) v4.FabricGatewayPackageTy
 		p = v4.FabricGatewayPackageType{Code: code}
 	}
 	return p
+}
+
+func projectToFabricGateway(projectRequest []interface{}) v4.Project {
+	if projectRequest == nil {
+		return v4.Project{}
+	}
+	mappedPr := v4.Project{}
+	for _, pr := range projectRequest {
+		prMap := pr.(map[string]interface{})
+		projectId := prMap["project_id"].(string)
+		mappedPr = v4.Project{ProjectId: projectId}
+	}
+	return mappedPr
 }
 
 func accountToTerra(account *v4.SimplifiedAccount) *schema.Set {
@@ -560,7 +568,7 @@ func fabricGatewayPackageToTerra(packageType *v4.FabricGatewayPackageType) *sche
 		}
 	}
 	packageSet := schema.NewSet(
-		schema.HashResource(createLocationRes),
+		schema.HashResource(createPackageRes),
 		mappedPackages,
 	)
 	return packageSet
