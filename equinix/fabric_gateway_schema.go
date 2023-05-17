@@ -27,7 +27,8 @@ func createFabricGatewayProjectSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"project_id": {
 			Type:        schema.TypeString,
-			Computed:    true,
+			Optional:    true,
+			Default:    "Project-0",
 			Description: "Project Id",
 		},
 		"href": {
@@ -67,8 +68,7 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 		},
 		"package": {
 			Type:        schema.TypeSet,
-			Optional:    true,
-			Computed:    true,
+			Required:    true,
 			Description: "Fabric Gateway location",
 			MaxItems:    1,
 			Elem: &schema.Resource{
@@ -100,7 +100,7 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 		},
 		"project": {
 			Type:        schema.TypeSet,
-			Computed:    true,
+			Optional:    true,
 			Description: "Fabric Gateway project",
 			Elem: &schema.Resource{
 				Schema: createFabricGatewayProjectSch(),

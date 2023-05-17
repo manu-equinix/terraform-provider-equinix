@@ -17,7 +17,23 @@ func TestAccFabricGatewayCreate(t *testing.T) {
 		CheckDestroy: checkFabricGatewayDelete,
 		Steps: []resource.TestStep{
 			{
-				Config:             testAccFabricGatewayCreateConfig(),
+				Config: testAccFabricGatewayCreateConfig("PRO"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_acc_test")),
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_gateway.test", "package.code", fmt.Sprint("PRO")),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccFabricGatewayCreateConfig("LAB"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_acc_test")),
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_gateway.test", "package.code", fmt.Sprint("LAB")),
+				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -39,28 +55,33 @@ func checkFabricGatewayDelete(s *terraform.State) error {
 	return nil
 }
 
-// To-do: Add config
-func testAccFabricGatewayCreateConfig() string {
-	return fmt.Sprint(`resource "equinix_fabric_gateway" "test"{
-        type = "XF_GATEWAY"
-        name = "fg_tf_acc_test"
-        location{
-          metro_code  = "SV"
-        }
-		package{
-	      code = "PRO"
-		}
-        order{
-        	purchase_order_number = "1-234567"
-       }
-       notifications{
-          type = "ALL"
-          emails = ["test@equinix.com","test1@equinix.com"]
-       }
-      account {
-        account_number = 203612
- 	  }
-	}`)
+func testAccFabricGatewayCreateConfig(name string) string {
+	return fmt.Sprintf(`resource "equinix_fabric_gateway" "test"{
+			type = "XF_GATEWAY"
+			name = "fg_tf_acc_test"
+			location{
+			  metro_code  = "SV"
+			}
+			package{
+				  code = "%s"
+			}
+			order{
+				purchase_order_number = "1-234567"
+			}
+			   notifications{
+				  type = "ALL"
+				  emails = [
+					"test@equinix.com",
+					"test1@equinix.com"
+				]
+			}
+				project{
+				   project_id = "776847000642406"
+			}
+			  account {
+				account_number = 203612
+			}
+		}`, name)
 }
 
 func TestAccFabricGatewayRead(t *testing.T) {
@@ -79,8 +100,34 @@ func TestAccFabricGatewayRead(t *testing.T) {
 	})
 }
 
+
 func testAccFabricGatewayReadConfig() string {
 	return fmt.Sprint(`data "equinix_fabric_gateway" "test" {
-	uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
+		uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
 	}`)
+}
+
+func TestAccFabricGatewayUpdate(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFabricGatewayUpdateConfig("fg_tf_test_Update"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_test_Update")),
+				),
+			},
+		},
+	})
+}
+
+func testAccFabricGatewayUpdateConfig(name string) string {
+	return fmt.Sprintf(`data "equinix_fabric_gateway" "test"{
+		uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
+		op = "replace"
+		path = "/name"
+		value = %s
+	}`, name)
 }

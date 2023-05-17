@@ -42,11 +42,14 @@ func resourceFabricGatewayCreate(ctx context.Context, d *schema.ResourceData, me
 	schemaOrder := d.Get("order").(*schema.Set).List()
 	order := orderToFabric(schemaOrder)
 	schemaAccount := d.Get("account").(*schema.Set).List()
-	account := accountToFabric(schemaAccount)
+	account := accountToFabricGateway(schemaAccount)
 	schemaLocation := d.Get("location").(*schema.Set).List()
 	location := locationToFabricGateway(schemaLocation)
+	project := v4.Project{}
 	schemaProject := d.Get("project").(*schema.Set).List()
-	project := projectToFabricGateway(schemaProject)
+	if len(schemaProject) != 0 {
+		project = projectToFabricGateway(schemaProject)
+	}
 	schemaPackage := d.Get("package").(*schema.Set).List()
 	packages := packageToFabricGateway(schemaPackage)
 
@@ -108,7 +111,6 @@ func setFabricGatewayMap(d *schema.ResourceData, fg v4.FabricGateway) diag.Diagn
 	return diags
 }
 
-// TO-DO FG Update implementation
 func resourceFabricGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)

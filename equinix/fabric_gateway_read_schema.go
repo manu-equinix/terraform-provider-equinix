@@ -6,7 +6,7 @@ func readPackageSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"code": {
 			Type:        schema.TypeString,
-			Optional:    true,
+			Computed:    true,
 			Description: "Fabric Gateway package code",
 		},
 	}
@@ -91,6 +91,7 @@ func readFabricGatewayResourceSchema() map[string]*schema.Schema {
 		"project": {
 			Type:        schema.TypeSet,
 			Optional:    true,
+			Computed: 	 true,
 			Description: "Project information",
 			Elem: &schema.Resource{
 				Schema: readGatewayProjectSch(),

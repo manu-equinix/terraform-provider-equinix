@@ -230,7 +230,7 @@ func locationToFabric(locationList []interface{}) v4.SimplifiedLocation {
 	return sl
 }
 
-func accountToFabric(accountList []interface{}) v4.SimplifiedAccount {
+func accountToFabricGateway(accountList []interface{}) v4.SimplifiedAccount {
 	sa := v4.SimplifiedAccount{}
 	for _, ll := range accountList {
 		llMap := ll.(map[string]interface{})
