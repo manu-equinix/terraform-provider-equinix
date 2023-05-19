@@ -29,7 +29,7 @@ func TestAccFabricGatewayCreate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_acc_update")),
-						),
+				),
 				ExpectNonEmptyPlan: false,
 			},
 		},
@@ -59,7 +59,7 @@ func testAccFabricGatewayCreateConfig(name string) string {
 			  metro_code  = "SV"
 			}
 			package{
-				  code = "LAB"
+				  code = "PRO"
 			}
 			order{
 				purchase_order_number = "1-234567"
@@ -96,12 +96,12 @@ func TestAccFabricGatewayRead(t *testing.T) {
 	})
 }
 
-
 func testAccFabricGatewayReadConfig() string {
 	return fmt.Sprint(`data "equinix_fabric_gateway" "test" {
 		uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
 	}`)
 }
+
 //
 //func TestAccFabricGatewayUpdate(t *testing.T) {
 //	resource.ParallelTest(t, resource.TestCase{
