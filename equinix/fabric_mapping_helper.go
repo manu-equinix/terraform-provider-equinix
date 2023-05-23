@@ -297,6 +297,25 @@ func accountToTerra(account *v4.SimplifiedAccount) *schema.Set {
 	return accountSet
 }
 
+func accountFgToTerra(account *v4.SimplifiedAccount) *schema.Set {
+	if account == nil {
+		return nil
+	}
+	accounts := []*v4.SimplifiedAccount{account}
+	mappedAccounts := make([]interface{}, len(accounts))
+	for i, account := range accounts {
+		mappedAccounts[i] = map[string]interface{}{
+			"account_number": int(account.AccountNumber),
+		}
+	}
+	accountSet := schema.NewSet(
+		schema.HashResource(createFgAccountRes),
+		mappedAccounts,
+	)
+
+	return accountSet
+}
+
 func errorToTerra(errors []v4.ModelError) []map[string]interface{} {
 	if errors == nil {
 		return nil

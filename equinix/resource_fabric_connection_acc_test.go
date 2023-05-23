@@ -101,11 +101,11 @@ func testAccFabricCreateEPLConnectionConfig(bandwidth int32) string {
 		access_point {
 			type = "COLO"
 				port {
-				uuid = "c4d86b09-e9f3-9f39-20e0-306a5c00ab8b"
+				uuid = "eb92632a-3747-7478-b5e0-306a5c00aecd"
 				}
 				link_protocol {
-					type= "QINQ"
-					vlan_s_tag= 2309
+					type= "DOT1Q"
+					vlan_tag= 2397
 				}
 			}
 		}
@@ -113,14 +113,14 @@ func testAccFabricCreateEPLConnectionConfig(bandwidth int32) string {
 		access_point {
 			type = "COLO"
 				port{
-				uuid = "c4d86b09-ea04-a049-20e0-306a5c00ab8b"
+				uuid = "3d7c1d97-2833-46fd-b1b1-ca619263eeb9"
 				}
 				link_protocol {
-					type= "QINQ"
-					vlan_s_tag= 2310
+					type= "DOT1Q"
+					vlan_tag= 2398
 				}
 			location {
-        		metro_code= "SV"
+        		metro_code= "CH"
       		}
 			}
 		}
@@ -287,11 +287,8 @@ func testAccFabricCreateFG2portConnectionConfig(name string) string {
 				}
 				link_protocol {
 					type= "DOT1Q"
-					vlan_tag= 2310
+					vlan_tag= 2325
 				}
-			location {
-        		metro_code= "CH"
-      		}
 			}
 		}
 	}`, name)
