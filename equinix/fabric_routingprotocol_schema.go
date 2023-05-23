@@ -51,7 +51,8 @@ func createBgpConnectionIpv4Sch() map[string]*schema.Schema {
 		},
 		"enabled": {
 			Type: schema.TypeBool,
-			Required: false,
+			Optional: true,
+			Default: true,
 			Description: "Admin status for the BGP session",
 		},
 	}
@@ -75,7 +76,8 @@ func createBgpConnectionIpv6Sch() map[string]*schema.Schema {
 		},
 		"enabled": {
 			Type:        schema.TypeBool,
-			Required:    false,
+			Optional:    true,
+			Default: 	 true,
 			Description: "Admin status for the BGP session",
 		},
 	}
@@ -89,12 +91,13 @@ func createRoutingProtocolBfdSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"enabled": {
 			Type: schema.TypeBool,
-			Required: false,
+			Required: true,
 			Description: "Bidirectional Forwarding Detection enablement",
 		},
 		"interval": {
 			Type: schema.TypeString,
 			Optional: false,
+			Default: 100,
 			// todo: validation
 			Description: "Interval range between the received BFD control packets",
 		},
@@ -124,11 +127,11 @@ var createRoutingProtocolChangeRes = &schema.Resource{
 
 func createRoutingProtocolChangeSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"description": {
-			Type: schema.TypeString,
-			Computed: true,
-			Description: "Current state of latest Routing Protocol change",
-		},
+		//"description": {
+		//	Type: schema.TypeString,
+		//	Computed: true,
+		//	Description: "Details of latest Routing Protocol change",
+		//},
 		"uuid": {
 			Type: schema.TypeString,
 			Computed: true,
@@ -148,80 +151,6 @@ func createRoutingProtocolChangeSch() map[string]*schema.Schema {
 	}
 }
 
-// todo:routingProtocol /changes schema
-////var createChangesRes = &schema.Resource{
-////	Schema: createChangesSch(),
-////}
-//func createChangesSch() map[string]*schema.Schema {
-//	return map[string]*schema.Schema{
-//		"href": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Routing Protocol Changes URI information",
-//		},
-//		"type": {
-//			Type: ,
-//			Computed: ,
-//			Description: ,
-//		},
-//		"uuid": {
-//			Type: ,
-//			Computed: ,
-//			Description: ,
-//		},
-//		"status": {
-//			Type: ,
-//			Computed: ,
-//			Description: ,
-//		},
-//		"created_by": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Created by User Key",
-//		},
-//		"created_by_full_name": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Created by User Full Name",
-//		},
-//		"created_by_email": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Created by User Email Address",
-//		},
-//		"created_date_time": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Created by Date and Time",
-//		},
-//		"updated_by": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Updated by User Key",
-//		},
-//		"updated_by_full_name": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Updated by User Full Name",
-//		},
-//		"updated_by_email": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Updated by User Email Address",
-//		},
-//		"updated_date_time": {
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Updated by Date and Time",
-//		},
-//		"data": {	// fixme
-//			Type:        schema.TypeString,
-//			Computed:    true,
-//			Description: "Change data",
-//		},
-//	}
-//}
-
 func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"href": {
@@ -235,11 +164,11 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			ValidateFunc: validation.StringInSlice([]string{"BGP", "DIRECT"}, true),
 			Description:  "Defines the routing protocol type like BGP or DIRECT",
 		},
-		//"uuid": {
-		//	Type: ,
-		//	Computed: ,
-		//	Description: ,
-		//},
+		"uuid": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Equinix-assigned routing protocol identifier",
+		},
 		"name": {
 			Type:        schema.TypeString,
 			Required:    true,
@@ -267,15 +196,16 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		"change": {
 			Type: schema.TypeSet,
 			Computed: true,
-			Description: "", // todo: add
+			Description: "Routing Protocol configuration Changes",
 			Elem: &schema.Resource{
 				Schema: createRoutingProtocolChangeSch(),
 			},
 		},
+		// fixme: questions about primative behaviors for ipv4 and ipv6
 		"direct_ipv4": {
 			Type: schema.TypeSet,
 			Required: true,
-			Description: "", // todo: add
+			Description: "Routing Protocol Direct IPv4",
 			Elem: &schema.Resource{
 				Schema: createDirectConnectionIpv4Sch(),
 			},
@@ -283,15 +213,15 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		"direct_ipv6": {
 			Type: schema.TypeSet,
 			Optional: true,
-			Description: "", // todo: add
+			Description: "Routing Protocol Direct IPv6",
 			Elem: &schema.Resource{
 				Schema: createDirectConnectionIpv6Sch(),
 			},
 		},
 		"bgp_ipv4": {
 			Type: schema.TypeSet,
-			Required: true,
-			Description: "", // todo: add
+			Optional: true,
+			Description: "Routing Protocol BGP IPv4",
 			Elem: &schema.Resource{
 				Schema: createBgpConnectionIpv4Sch(),
 			},
@@ -299,7 +229,7 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		"bgp_ipv6": {
 			Type: schema.TypeSet,
 			Optional: true,
-			Description: "", // todo: add
+			Description: "Routing Protocol BGP IPv6",
 			Elem: &schema.Resource{
 				Schema: createBgpConnectionIpv6Sch(),
 			},
@@ -316,13 +246,13 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		},
 		"bgp_auth_key": {
 			Type: schema.TypeString,
-			Required: false,
+			Optional: true,
 			Description: "BGP authorization key",
 		},
 		"bfd": {
 			Type: schema.TypeSet,
-			Required: false,
-			Description: "",
+			Optional: true,
+			Description: "Bidirectional Forwarding Detection",
 			Elem: &schema.Resource{
 				Schema: createRoutingProtocolBfdSch(),
 			},
