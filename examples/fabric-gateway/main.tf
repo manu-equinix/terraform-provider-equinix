@@ -29,5 +29,6 @@ resource "equinix_fabric_gateway" "test"{
 }
 
 output "fg_result" {
-  value = equinix_fabric_gateway.id
+  value = equinix_fabric_gateway.test.id
 }
+
