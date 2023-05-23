@@ -6,11 +6,11 @@ import (
 )
 
 
-var createDirectConnectionIpv4Res = &schema.Resource{
-	Schema: createDirectConnectionIpv4Sch(),
+var createRoutingProtocolDirectIpv4Res = &schema.Resource{
+	Schema: createRoutingProtocolDirectIpv4Sch(),
 }
 
-func createDirectConnectionIpv4Sch() map[string]*schema.Schema {
+func createRoutingProtocolDirectIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"equinixIfaceIp": {
 			Type: schema.TypeString,
@@ -20,11 +20,11 @@ func createDirectConnectionIpv4Sch() map[string]*schema.Schema {
 	}
 }
 
-var createDirectConnectionIpv6Res = &schema.Resource{
-	Schema: createDirectConnectionIpv6Sch(),
+var createRoutingProtocolDirectIpv6Res = &schema.Resource{
+	Schema: createRoutingProtocolDirectIpv6Sch(),
 }
 
-func createDirectConnectionIpv6Sch() map[string]*schema.Schema {
+func createRoutingProtocolDirectIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"equinixIfaceIp": {
 			Type: schema.TypeString,
@@ -33,11 +33,11 @@ func createDirectConnectionIpv6Sch() map[string]*schema.Schema {
 		},
 	}
 }
-var createBgpConnectionIpv4Res = &schema.Resource{
-	Schema: createBgpConnectionIpv4Sch(),
+var createRoutingProtocolBgpIpv4Res = &schema.Resource{
+	Schema: createRoutingProtocolBgpIpv4Sch(),
 }
 
-func createBgpConnectionIpv4Sch() map[string]*schema.Schema {
+func createRoutingProtocolBgpIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"customerPeerIp": {
 			Type: schema.TypeString,
@@ -58,11 +58,11 @@ func createBgpConnectionIpv4Sch() map[string]*schema.Schema {
 	}
 }
 
-var createBgpConnectionIpv6Res = &schema.Resource{
-	Schema: createBgpConnectionIpv6Sch(),
+var createRoutingProtocolBgpIpv6Res = &schema.Resource{
+	Schema: createRoutingProtocolBgpIpv6Sch(),
 }
 
-func createBgpConnectionIpv6Sch() map[string]*schema.Schema {
+func createRoutingProtocolBgpIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"customerPeerIp": {
 			Type:        schema.TypeString,
@@ -207,7 +207,7 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Required: true,
 			Description: "Routing Protocol Direct IPv4",
 			Elem: &schema.Resource{
-				Schema: createDirectConnectionIpv4Sch(),
+				Schema: createRoutingProtocolDirectIpv4Sch(),
 			},
 		},
 		"direct_ipv6": {
@@ -215,7 +215,7 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Description: "Routing Protocol Direct IPv6",
 			Elem: &schema.Resource{
-				Schema: createDirectConnectionIpv6Sch(),
+				Schema: createRoutingProtocolDirectIpv6Sch(),
 			},
 		},
 		"bgp_ipv4": {
@@ -223,7 +223,7 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Description: "Routing Protocol BGP IPv4",
 			Elem: &schema.Resource{
-				Schema: createBgpConnectionIpv4Sch(),
+				Schema: createRoutingProtocolBgpIpv4Sch(),
 			},
 		},
 		"bgp_ipv6": {
@@ -231,7 +231,7 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Description: "Routing Protocol BGP IPv6",
 			Elem: &schema.Resource{
-				Schema: createBgpConnectionIpv6Sch(),
+				Schema: createRoutingProtocolBgpIpv6Sch(),
 			},
 		},
 		"customer_asn": {

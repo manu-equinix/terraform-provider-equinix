@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func readDirectConnectionIpv4Sch() map[string]*schema.Schema {
+func readRoutingProtocolDirectIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"equinixIfaceIp": {
 			Type: schema.TypeString,
@@ -13,7 +13,7 @@ func readDirectConnectionIpv4Sch() map[string]*schema.Schema {
 		},
 	}
 }
-func readDirectConnectionIpv6Sch() map[string]*schema.Schema {
+func readRoutingProtocolDirectIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"equinixIfaceIp": {
 			Type: schema.TypeString,
@@ -22,7 +22,7 @@ func readDirectConnectionIpv6Sch() map[string]*schema.Schema {
 		},
 	}
 }
-func readBgpConnectionIpv4Sch() map[string]*schema.Schema {
+func readRoutingProtocolBgpIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"customerPeerIp": {
 			Type: schema.TypeString,
@@ -42,7 +42,7 @@ func readBgpConnectionIpv4Sch() map[string]*schema.Schema {
 		},
 	}
 }
-func readBgpConnectionIpv6Sch() map[string]*schema.Schema {
+func readRoutingProtocolBgpIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"customerPeerIp": {
 			Type:        schema.TypeString,
@@ -168,7 +168,7 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Required: true,
 			Description: "Routing Protocol Direct IPv4",
 			Elem: &schema.Resource{
-				Schema: readDirectConnectionIpv4Sch(),
+				Schema: readRoutingProtocolDirectIpv4Sch(),
 			},
 		},
 		"direct_ipv6": {
@@ -176,7 +176,7 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Description: "Routing Protocol Direct IPv6",
 			Elem: &schema.Resource{
-				Schema: readDirectConnectionIpv6Sch(),
+				Schema: readRoutingProtocolDirectIpv6Sch(),
 			},
 		},
 		"bgp_ipv4": {
@@ -184,7 +184,7 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Description: "Routing Protocol BGP IPv4",
 			Elem: &schema.Resource{
-				Schema: readBgpConnectionIpv4Sch(),
+				Schema: readRoutingProtocolBgpIpv4Sch(),
 			},
 		},
 		"bgp_ipv6": {
@@ -192,7 +192,7 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Optional: true,
 			Description: "Routing Protocol BGP IPv6",
 			Elem: &schema.Resource{
-				Schema: readBgpConnectionIpv6Sch(),
+				Schema: readRoutingProtocolBgpIpv6Sch(),
 			},
 		},
 		"customer_asn": {
