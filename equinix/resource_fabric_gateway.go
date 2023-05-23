@@ -61,7 +61,7 @@ func resourceFabricGatewayCreate(ctx context.Context, d *schema.ResourceData, me
 		Notifications: notifications,
 		Package_:      &packages,
 		Account:       &account,
-		Project: 	   &project,
+		Project:       &project,
 	}
 
 	fg, _, err := client.GatewaysApi.CreateGateway(ctx, createRequest)
@@ -102,6 +102,7 @@ func setFabricGatewayMap(d *schema.ResourceData, fg v4.FabricGateway) diag.Diagn
 		"package":       fabricGatewayPackageToTerra(fg.Package_),
 		"location":      locationFGToTerra(fg.Location),
 		"change_log":    changeLogToTerra(fg.ChangeLog),
+		"account":       accountFgToTerra(fg.Account),
 		"notifications": notificationToTerra(fg.Notifications),
 		"project":       projectToTerra(fg.Project),
 	})
@@ -148,18 +149,14 @@ func resourceFabricGatewayUpdate(ctx context.Context, d *schema.ResourceData, me
 func waitForFGUpdateCompletion(uuid string, meta interface{}, ctx context.Context) (v4.FabricGateway, error) {
 	log.Printf("Waiting for FG update to complete, uuid %s", uuid)
 	stateConf := &resource.StateChangeConf{
-		Target: []string{"COMPLETED"},
+		Target: []string{string(v4.PROVISIONED_FabricGatewayAccessPointState)},
 		Refresh: func() (interface{}, string, error) {
 			client := meta.(*Config).fabricClient
 			dbConn, _, err := client.GatewaysApi.GetGatewayByUuid(ctx, uuid)
 			if err != nil {
 				return "", "", err
 			}
-			updatableState := ""
-			if dbConn.Change.Status == "COMPLETED" {
-				updatableState = dbConn.Change.Status
-			}
-			return dbConn, updatableState, nil
+			return dbConn, string(*dbConn.State), nil
 		},
 		Timeout:    2 * time.Minute,
 		Delay:      30 * time.Second,
@@ -215,8 +212,8 @@ func resourceFabricGatewayDelete(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		errors, ok := err.(v4.GenericSwaggerError).Model().([]v4.ModelError)
 		if ok {
-			// EQ-3142509 = Connection already deleted
-			if hasModelErrorCode(errors, "EQ-3142509") {
+			// EQ-3040055 = There is an existing update in REQUESTED state
+			if hasModelErrorCode(errors, "EQ-3040055") {
 				return diags
 			}
 		}

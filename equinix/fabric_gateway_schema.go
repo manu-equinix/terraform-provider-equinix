@@ -16,7 +16,22 @@ func createPackageSch() map[string]*schema.Schema {
 }
 
 var createPackageRes = &schema.Resource{
-	Schema: createAccountSch(),
+	Schema: createPackageSch(),
+}
+
+var createFgAccountRes = &schema.Resource{
+	Schema: createFgAccountSch(),
+}
+
+func createFgAccountSch() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"account_number": {
+			Type:        schema.TypeInt,
+			Computed:    true,
+			Optional:    true,
+			Description: "Account Number",
+		},
+	}
 }
 
 var createFabricGatewayProjectSchRes = &schema.Resource{
@@ -27,12 +42,13 @@ func createFabricGatewayProjectSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"project_id": {
 			Type:        schema.TypeString,
+			Computed:    true,
 			Optional:    true,
-			Default:    "Project-0",
 			Description: "Project Id",
 		},
 		"href": {
 			Type:        schema.TypeString,
+			Optional:    true,
 			Computed:    true,
 			Description: "Unique Resource URL",
 		},
@@ -112,7 +128,7 @@ func createFabricGatewayResourceSchema() map[string]*schema.Schema {
 			Description: "Customer account information that is associated with this connection",
 			MaxItems:    1,
 			Elem: &schema.Resource{
-				Schema: createAccountSch(),
+				Schema: createFgAccountSch(),
 			},
 		},
 		"order": {

@@ -125,8 +125,6 @@ func projectToFabric(projectRequest []interface{}) v4.Project {
 	}
 	return mappedPr
 }
-
-
 func notificationToFabric(schemaNotifications []interface{}) []v4.SimplifiedNotification {
 	if schemaNotifications == nil {
 		return []v4.SimplifiedNotification{}
@@ -292,6 +290,25 @@ func accountToTerra(account *v4.SimplifiedAccount) *schema.Set {
 	}
 	accountSet := schema.NewSet(
 		schema.HashResource(createAccountRes),
+		mappedAccounts,
+	)
+
+	return accountSet
+}
+
+func accountFgToTerra(account *v4.SimplifiedAccount) *schema.Set {
+	if account == nil {
+		return nil
+	}
+	accounts := []*v4.SimplifiedAccount{account}
+	mappedAccounts := make([]interface{}, len(accounts))
+	for i, account := range accounts {
+		mappedAccounts[i] = map[string]interface{}{
+			"account_number": int(account.AccountNumber),
+		}
+	}
+	accountSet := schema.NewSet(
+		schema.HashResource(createFgAccountRes),
 		mappedAccounts,
 	)
 
