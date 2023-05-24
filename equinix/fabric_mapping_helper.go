@@ -126,7 +126,6 @@ func projectToFabric(projectRequest []interface{}) v4.Project {
 	return mappedPr
 }
 
-
 func notificationToFabric(schemaNotifications []interface{}) []v4.SimplifiedNotification {
 	if schemaNotifications == nil {
 		return []v4.SimplifiedNotification{}
@@ -798,6 +797,88 @@ func portToTerra(port *v4.SimplifiedPort) *schema.Set {
 		mappedPorts,
 	)
 	return portSet
+}
+
+func routingProtocolBfdToFabric(routingProtocolBfdRequest []interface{}) v4.RoutingProtocolBfd {
+	mappedRpBfd := v4.RoutingProtocolBfd{}
+	for _, str := range routingProtocolBfdRequest {
+		rpBfdMap := str.(map[string]interface{})
+		bfdEnabled := rpBfdMap["enabled"].(bool)
+		bfdInterval := rpBfdMap["interval"].(string)
+
+		mappedRpBfd = v4.RoutingProtocolBfd{Enabled: bfdEnabled, Interval: bfdInterval}
+	}
+	return mappedRpBfd
+}
+
+func routingProtocolBfdToTerra(routingProtocolBfd *v4.RoutingProtocolBfd) *schema.Set {
+	if routingProtocolBfd == nil {
+		return nil
+	}
+	routingProtocolBfds := []*v4.RoutingProtocolBfd{routingProtocolBfd}
+	mappedRpBfds := make([]interface{}, len(routingProtocolBfds))
+	for i, rpBfds := range routingProtocolBfds {
+		mappedRpBfds[i] = map[string]interface{}{
+			"enabled":	rpBfds.Enabled,
+			"interval":	rpBfds.Interval,
+		}
+	}
+	rpBfdSet := schema.NewSet(
+		schema.HashResource(createRoutingProtocolBfdRes),
+		mappedRpBfds,
+	)
+	return rpBfdSet
+}
+
+func routingProtocolOperationToTerra(routingProtocolOperation *v4.RoutingProtocolOperation) *schema.Set {
+	if routingProtocolOperation == nil {
+		return nil
+	}
+	routingProtocolOperations := []*v4.RoutingProtocolOperation{routingProtocolOperation}
+	mappedRpOperations := make([]interface{}, len(routingProtocolOperations))
+	for i, rpOperations := range routingProtocolOperations {
+		mappedRpOperations[i] = map[string]interface{}{
+			"errors":	rpOperations.Errors,
+		}
+	}
+	rpOperationSet := schema.NewSet(
+		schema.HashResource(createRoutingProtocolOperationRes),
+		mappedRpOperations,
+	)
+	return rpOperationSet
+}
+
+func routingProtocolChangeToFabric(routingProtocolChangeRequest []interface{}) v4.RoutingProtocolChange {
+	mappedRpChange := v4.RoutingProtocolChange{}
+	for _, str := range routingProtocolChangeRequest {
+		rpChangeMap := str.(map[string]interface{})
+		uuid := rpChangeMap["uuid"].(string)
+		rpChangeType := rpChangeMap["type"].(string)
+
+		mappedRpChange = v4.RoutingProtocolChange{Uuid: uuid, Type_: rpChangeType}
+	}
+	return mappedRpChange
+}
+
+func routingProtocolChangeToTerra(routingProtocolChange *v4.RoutingProtocolChange) *schema.Set {
+	if routingProtocolChange == nil {
+		return nil
+	}
+	routingProtocolChanges := []*v4.RoutingProtocolChange{routingProtocolChange}
+	mappedRpChanges := make([]interface{}, len(routingProtocolChanges))
+	for i, rpChanges := range routingProtocolChanges {
+		mappedRpChanges[i] = map[string]interface{}{
+			"uuid":	rpChanges.Uuid,
+			"type":	rpChanges.Type_,
+			"href":	rpChanges.Href,
+
+		}
+	}
+	rpChangeSet := schema.NewSet(
+		schema.HashResource(createRoutingProtocolChangeRes),
+		mappedRpChanges,
+	)
+	return rpChangeSet
 }
 
 func getUpdateRequest(conn v4.Connection, d *schema.ResourceData) (v4.ConnectionChangeOperation, error) {
