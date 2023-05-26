@@ -13,8 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-var connId = "temp connection uuid" // fixme: get connectionId
-
 func resourceFabricRoutingProtocol() *schema.Resource {
 	return &schema.Resource{
 		Timeouts: &schema.ResourceTimeout{
@@ -39,7 +37,7 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
-	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, d.Id(), connId)
+	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, d.Id(), d.Get("connUuid").(string))
 	if err != nil {
 		log.Printf("[WARN] Routing Protocol %s not found , error %s", d.Id(), err)
 		if !strings.Contains(err.Error(), "500") {
@@ -91,7 +89,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 			},
 		},
 	}
-	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, connId)
+	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connUuid").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -103,7 +101,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 
-	if err = waitUntilRoutingProtocolIsProvisioned(d.Id(), connId, meta, ctx); err != nil {
+	if err = waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connUuid").(string), meta, ctx); err != nil {
 		return diag.Errorf("error waiting for RP (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -114,7 +112,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 	diags := diag.Diagnostics{}
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
-	_, resp, err := client.RoutingProtocolsApi.DeleteConnectionRoutingProtocolByUuid(ctx, d.Id(), connId)
+	_, resp, err := client.RoutingProtocolsApi.DeleteConnectionRoutingProtocolByUuid(ctx, d.Id(), d.Get("connUuid").(string))
 	if err != nil {
 		errors, ok := err.(v4.GenericSwaggerError).Model().([]v4.ModelError)
 		if ok {
@@ -126,7 +124,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol delete. Error %v and response %v", err, resp))
 	}
 
-	err = waitUntilRoutingProtocolDeprovisioned(d.Id(), connId, meta, ctx)
+	err = waitUntilRoutingProtocolDeprovisioned(d.Id(), d.Get("connUuid").(string), meta, ctx)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("API call failed while waiting for resource deletion. Error %v", err))
 	}

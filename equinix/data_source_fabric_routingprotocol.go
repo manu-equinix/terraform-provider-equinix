@@ -17,6 +17,11 @@ func dataSourceRoutingProtocol() *schema.Resource {
 
 func dataSourceRoutingProtocolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	uuid, _ := d.Get("uuid").(string)
+	connUuid, _ := d.Get("connection_uuid").(string)
+	err := d.Set("connUuid", connUuid)
+	if err != nil {
+		return nil
+	}
 	d.SetId(uuid)
 	return resourceFabricRoutingProtocolRead(ctx, d, meta)
 }
