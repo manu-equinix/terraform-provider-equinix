@@ -268,10 +268,10 @@ func createRoutingProtocolChangeSch() map[string]*schema.Schema {
 			Description: "Uniquely identifies a change",
 		},
 		"type": {
-			Type:         schema.TypeString,
-			Computed:     true,
-			ValidateFunc: validation.StringInSlice([]string{"ROUTING_PROTOCOL_UPDATE", "ROUTING_PROTOCOL_CREATION", "ROUTING_PROTOCOL_DELETION"}, true),
-			Description:  "Type of change",
+			Type:     schema.TypeString,
+			Computed: true,
+			//ValidateFunc: validation.StringInSlice([]string{"ROUTING_PROTOCOL_UPDATE", "ROUTING_PROTOCOL_CREATION", "ROUTING_PROTOCOL_DELETION"}, true),
+			Description: "Type of change",
 		},
 		"href": {
 			Type:        schema.TypeString,
@@ -310,10 +310,10 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Description: "Customer-provided Fabric Routing Protocol description",
 		},
 		"state": {
-			Type:         schema.TypeString,
-			Computed:     true,
-			ValidateFunc: validation.StringInSlice([]string{"PROVISIONED", "DEPROVISIONED", "PROVISIONING", "DEPROVISIONING", "REPROVISIONING", "FAILED"}, true),
-			Description:  "Routing Protocol overall state",
+			Type:     schema.TypeString,
+			Computed: true,
+			//ValidateFunc: validation.StringInSlice([]string{"PROVISIONED", "DEPROVISIONED", "PROVISIONING", "DEPROVISIONING", "REPROVISIONING", "FAILED"}, true),
+			Description: "Routing Protocol overall state",
 		},
 		"operation": {
 			Type:        schema.TypeSet,

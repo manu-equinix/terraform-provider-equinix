@@ -1089,7 +1089,7 @@ func getRoutingProtocolUpdateRequest(rp v4.RoutingProtocolData, d *schema.Resour
 	updateBgpIpv4Status := d.Get("rp.BgpIpv4.Enabled")
 	updateBgpIpv6Status := d.Get("rp.BgpIpv6.Enabled")
 
-	log.Printf("existing BGP IPv4 Status: %s, existing BGP IPv6 Status: %s, Update BGP IPv4 Request: %s, Update BGP Ipv6 Request: %s ",
+	log.Printf("existing BGP IPv4 Status: %t, existing BGP IPv6 Status: %t, Update BGP IPv4 Request: %t, Update BGP Ipv6 Request: %t",
 		existingBgpIpv4Status, existingBgpIpv6Status, updateBgpIpv4Status, updateBgpIpv6Status)
 
 	if existingBgpIpv4Status != updateBgpIpv4Status {

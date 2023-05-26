@@ -68,7 +68,12 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 	schemaBfd := d.Get("bfd").(*schema.Set).List()
 	bfd := routingProtocolBfdToFabric(schemaBfd)
 
-	var createRequest = v4.RoutingProtocolBase{
+	bgpAuthKey := d.Get("bgp_auth_key")
+	if bgpAuthKey == nil {
+		bgpAuthKey = ""
+	}
+
+	createRequest := v4.RoutingProtocolBase{
 		Type_: d.Get("type").(string),
 		OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
 			RoutingProtocolBgpType: v4.RoutingProtocolBgpType{
@@ -76,9 +81,9 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 				Name:        d.Get("name").(string),
 				BgpIpv4:     &bgpIpv4,
 				BgpIpv6:     &bgpIpv6,
-				CustomerAsn: d.Get("customer_asn").(int64),
-				EquinixAsn:  d.Get("equinix_asn").(int64),
-				BgpAuthKey:  d.Get("bgp_auth_key").(string),
+				CustomerAsn: int64(d.Get("customer_asn").(int)),
+				EquinixAsn:  int64(d.Get("equinix_asn").(int)),
+				BgpAuthKey:  bgpAuthKey.(string),
 				Bfd:         &bfd,
 			},
 			RoutingProtocolDirectType: v4.RoutingProtocolDirectType{
