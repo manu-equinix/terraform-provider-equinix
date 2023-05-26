@@ -2,6 +2,7 @@ package equinix
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -10,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
+
+var connId = "temp connection uuid" // fixme: get connectionId
 
 func resourceFabricRoutingProtocol() *schema.Resource {
 	return &schema.Resource{
@@ -31,11 +34,7 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 		Description: "Fabric V4 API compatible resource allows creation and management of Equinix Fabric connection\n\n~> **Note** Equinix Fabric v4 resources and datasources are currently in Beta. The interfaces related to `equinix_fabric_` resources and datasources may change ahead of general availability. Please, do not hesitate to report any problems that you experience by opening a new [issue](https://github.com/equinix/terraform-provider-equinix/issues/new?template=bug.md)",
 	}
 }
-
 func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
-	connId := "temp connection uuid"
-
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
 	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, d.Id(), connId)
@@ -46,7 +45,12 @@ func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceDa
 		}
 		return diag.FromErr(err)
 	}
-	d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
+	switch fabricRoutingProtocol.Type_ {
+	case "BGP":
+		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
+	case "DIRECT":
+		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
+	}
 	return setFabricRoutingProtocolMap(d, fabricRoutingProtocol)
 }
 
@@ -85,16 +89,16 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 			},
 		},
 	}
-	rp, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, "testConnectionId") // fixme: get connectionId
+	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, connId)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	switch rp.Type_ {
+	switch fabricRoutingProtocol.Type_ {
 	case "BGP":
-		d.SetId(rp.RoutingProtocolBgpData.Uuid)
+		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
 	case "DIRECT":
-		d.SetId(rp.RoutingProtocolDirectData.Uuid)
+		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 
 	if _, err = waitUntilFGIsProvisioned(d.Id(), meta, ctx); err != nil {
@@ -104,22 +108,64 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 	return resourceFabricRoutingProtocolRead(ctx, d, meta)
 }
 
+func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+	client := meta.(*Config).fabricClient
+	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
+	_, resp, err := client.RoutingProtocolsApi.DeleteConnectionRoutingProtocolByUuid(ctx, d.Id(), connId)
+	if err != nil {
+		errors, ok := err.(v4.GenericSwaggerError).Model().([]v4.ModelError)
+		if ok {
+			// EQ-3142509 = Connection already deleted
+			if hasModelErrorCode(errors, "EQ-3142509") {
+				return diags
+			}
+		}
+		return diag.FromErr(fmt.Errorf("error response for the routing protocol delete. Error %v and response %v", err, resp))
+	}
+
+	err = waitUntilConnectionDeprovisioned(d.Id(), meta, ctx)
+	if err != nil {
+		return diag.FromErr(fmt.Errorf("API call failed while waiting for resource deletion. Error %v", err))
+	}
+	return diags
+}
+
 func setFabricRoutingProtocolMap(d *schema.ResourceData, rp v4.RoutingProtocolData) diag.Diagnostics {
 	diags := diag.Diagnostics{}
 
+	err := error(nil) // fixme: doesnt look right
 	if rp.Type_ == "BGP" {
-		err := setMap(d, map[string]interface{}{
-			"name":    rp.RoutingProtocolBgpData.Name,
-			"href":    rp.RoutingProtocolBgpData.Href,
-			"type":    rp.RoutingProtocolBgpData.Type_,
-			"state":   rp.RoutingProtocolBgpData.State,
-			"bgpIpv4": rp.BgpIpv4,
+		err = setMap(d, map[string]interface{}{
+			"name":         rp.RoutingProtocolBgpData.Name,
+			"href":         rp.RoutingProtocolBgpData.Href,
+			"type":         rp.RoutingProtocolBgpData.Type_,
+			"state":        rp.RoutingProtocolBgpData.State,
+			"operation":    routingProtocolOperationToTerra(rp.RoutingProtocolBgpData.Operation),
+			"bgp_ipv4":     routingProtocolBgpConnectionIpv4ToTerra(rp.BgpIpv4),
+			"bgp_ipv6":     routingProtocolBgpConnectionIpv6ToTerra(rp.BgpIpv6),
+			"customer_asn": rp.CustomerAsn,
+			"equinix_asn":  rp.EquinixAsn,
+			"bfd":          routingProtocolBfdToTerra(rp.Bfd),
+			"bgp_auth_key": rp.BgpAuthKey,
+			"change":       routingProtocolChangeToTerra(rp.RoutingProtocolBgpData.Change),
+			"change_log":   changeLogToTerra(rp.RoutingProtocolBgpData.Changelog),
 		})
-		if err != nil {
-			return diag.FromErr(err)
-		}
-		return diags
+	} else if rp.Type_ == "DIRECT" {
+		err = setMap(d, map[string]interface{}{
+			"name":        rp.RoutingProtocolDirectData.Name,
+			"href":        rp.RoutingProtocolDirectData.Href,
+			"type":        rp.RoutingProtocolDirectData.Type_,
+			"state":       rp.RoutingProtocolDirectData.State,
+			"operation":   routingProtocolOperationToTerra(rp.RoutingProtocolDirectData.Operation),
+			"direct_ipv4": routingProtocolDirectConnectionIpv4ToTerra(rp.DirectIpv4),
+			"direct_ipv6": routingProtocolDirectConnectionIpv6ToTerra(rp.DirectIpv6),
+			"change":      routingProtocolChangeToTerra(rp.RoutingProtocolDirectData.Change),
+			"change_log":  changeLogToTerra(rp.RoutingProtocolDirectData.Changelog),
+		})
 	}
-
+	if err != nil {
+		return diag.FromErr(err)
+	}
 	return diags
 }

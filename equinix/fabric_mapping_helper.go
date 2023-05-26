@@ -885,6 +885,7 @@ func routingProtocolDirectTypeToTerra(routingProtocolDirect *v4.RoutingProtocolD
 		if routingProtocolDirect.DirectIpv6 != nil {
 			mappedDirect["direct_ipv6"] = routingProtocolDirectConnectionIpv6ToTerra(routingProtocolDirect.DirectIpv6)
 		}
+		mappedDirects = append(mappedDirects, mappedDirect)
 	}
 	rpDirectSet := schema.NewSet(
 		schema.HashResource(createRoutingProtocolDirectTypeRes),
@@ -951,6 +952,9 @@ func routingProtocolBgpTypeToTerra(routingProtocolBgp *v4.RoutingProtocolBgpType
 		if routingProtocolBgp.Bfd != nil {
 			mappedBgp["bfd"] = routingProtocolBfdToTerra(routingProtocolBgp.Bfd)
 		}
+
+		mappedBgps = append(mappedBgps, mappedBgp)
+
 	}
 	rpBgpSet := schema.NewSet(
 		schema.HashResource(createRoutingProtocolBgpTypeRes),
@@ -1025,10 +1029,12 @@ func routingProtocolOperationToTerra(routingProtocolOperation *v4.RoutingProtoco
 	}
 	routingProtocolOperations := []*v4.RoutingProtocolOperation{routingProtocolOperation}
 	mappedRpOperations := make([]interface{}, len(routingProtocolOperations))
-	for i, rpOperations := range routingProtocolOperations {
-		mappedRpOperations[i] = map[string]interface{}{
-			"errors": rpOperations.Errors,
+	for _, routingProtocolOperation := range routingProtocolOperations {
+		mappedRpOperation := make(map[string]interface{})
+		if routingProtocolOperation.Errors != nil {
+			mappedRpOperation["errors"] = errorToTerra(routingProtocolOperation.Errors)
 		}
+		mappedRpOperations = append(mappedRpOperations, mappedRpOperation)
 	}
 	rpOperationSet := schema.NewSet(
 		schema.HashResource(createRoutingProtocolOperationRes),
