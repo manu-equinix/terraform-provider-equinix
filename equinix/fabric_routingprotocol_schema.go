@@ -99,7 +99,7 @@ func createDirectConnectionIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"equinix_iface_ip": {
 			Type:        schema.TypeString,
-			Required:    false,
+			Optional:    true,
 			Description: "Equinix side Interface IP address\n\n",
 		},
 	}
@@ -171,7 +171,7 @@ func createBgpConnectionIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"customer_peer_ip": {
 			Type:        schema.TypeString,
-			Required:    false,
+			Required:    true,
 			Description: "Customer side peering ip",
 		},
 		"equinix_peer_ip": {
@@ -196,7 +196,7 @@ func createBgpConnectionIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"customer_peer_ip": {
 			Type:        schema.TypeString,
-			Required:    false,
+			Required:    true,
 			Description: "Customer side peering ip",
 		},
 		"equinix_peer_ip": {
@@ -226,7 +226,7 @@ func createRoutingProtocolBfdSch() map[string]*schema.Schema {
 		},
 		"interval": {
 			Type:     schema.TypeString,
-			Optional: false,
+			Optional: true,
 			Default:  100,
 			// todo: validation
 			Description: "Interval range between the received BFD control packets",
@@ -331,7 +331,6 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 				Schema: createRoutingProtocolChangeSch(),
 			},
 		},
-		// fixme: questions about primative behaviors for ipv4 and ipv6
 		"direct_ipv4": {
 			Type:        schema.TypeSet,
 			Required:    true,
@@ -366,7 +365,7 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		},
 		"customer_asn": {
 			Type:        schema.TypeInt,
-			Required:    true,
+			Optional:    true,
 			Description: "Customer-provided ASN",
 		},
 		"equinix_asn": {
