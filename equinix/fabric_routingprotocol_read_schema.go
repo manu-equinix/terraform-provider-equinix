@@ -240,6 +240,11 @@ func readRoutingProtocolChangeSch() map[string]*schema.Schema {
 
 func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"connection_uuid": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Connection URI associated with Routing Protocol",
+		},
 		"href": {
 			Type:        schema.TypeString,
 			Computed:    true,

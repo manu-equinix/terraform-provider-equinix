@@ -94,7 +94,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 			},
 		},
 	}
-	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connUuid").(string))
+	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connection_uuid").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -106,7 +106,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 
-	if _, err = waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connUuid").(string), meta, ctx); err != nil {
+	if _, err = waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx); err != nil {
 		return diag.Errorf("error waiting for RP (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -116,7 +116,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
-	dbConn, err := waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connUuid").(string), meta, ctx)
+	dbConn, err := waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
 		if !strings.Contains(err.Error(), "500") {
 			d.SetId("")
@@ -128,12 +128,12 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 	updates := []v4.ConnectionChangeOperation{update}
-	updatedRpResp, res, err := client.RoutingProtocolsApi.PatchConnectionRoutingProtocolByUuid(ctx, updates, d.Id(), d.Get("connUuid").(string))
+	updatedRpResp, res, err := client.RoutingProtocolsApi.PatchConnectionRoutingProtocolByUuid(ctx, updates, d.Id(), d.Get("connection_uuid").(string))
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol update, response %v, error %v", res, err))
 	}
 	updatedRp := v4.RoutingProtocolData{}
-	updatedRp, err = waitForRoutingProtocolUpdateCompletion(updatedRpResp.RoutingProtocolBgpData.Change.Uuid, d.Id(), d.Get("connUuid").(string), meta, ctx)
+	updatedRp, err = waitForRoutingProtocolUpdateCompletion(updatedRpResp.RoutingProtocolBgpData.Change.Uuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 
 	if err != nil {
 		if !strings.Contains(err.Error(), "500") {
@@ -150,7 +150,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 	diags := diag.Diagnostics{}
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
-	_, resp, err := client.RoutingProtocolsApi.DeleteConnectionRoutingProtocolByUuid(ctx, d.Id(), d.Get("connUuid").(string))
+	_, resp, err := client.RoutingProtocolsApi.DeleteConnectionRoutingProtocolByUuid(ctx, d.Id(), d.Get("connection_uuid").(string))
 	if err != nil {
 		errors, ok := err.(v4.GenericSwaggerError).Model().([]v4.ModelError)
 		if ok {
@@ -162,7 +162,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol delete. Error %v and response %v", err, resp))
 	}
 
-	err = waitUntilRoutingProtocolDeprovisioned(d.Id(), d.Get("connUuid").(string), meta, ctx)
+	err = waitUntilRoutingProtocolDeprovisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("API call failed while waiting for resource deletion. Error %v", err))
 	}

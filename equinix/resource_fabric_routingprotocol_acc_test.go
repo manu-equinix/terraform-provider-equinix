@@ -31,7 +31,9 @@ func TestAccFabricCreateRoutingProtocol(t *testing.T) {
 }
 
 func testAccFabricCreateRoutingProtocolDirectConfig(ipv4 string) string {
-	return fmt.Sprintf(`resource "equinix_fabric_routingprotocol" "test" {
+	return fmt.Sprintf(`	resource "equinix_fabric_routingprotocol" "test" {
+		connection_uuid = "f67896ea-fba1-11ed-be56-0242ac120002"
+
 		type = "DIRECT"
 		name = "fabric_tf_acc_test_rpDirect"
 		direct_ipv4{
