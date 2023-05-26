@@ -3,6 +3,7 @@ package equinix
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
 	"strings"
 	"time"
@@ -25,7 +26,7 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 		ReadContext:   resourceFabricRoutingProtocolRead,
 		CreateContext: resourceFabricRoutingProtocolCreate,
 		//UpdateContext: resourceFabricRoutingProtocolUpdate,
-		//DeleteContext: resourceFabricRoutingProtocolDelete,
+		DeleteContext: resourceFabricRoutingProtocolDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -101,7 +102,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 
-	if _, err = waitUntilFGIsProvisioned(d.Id(), meta, ctx); err != nil {
+	if err = waitUntilRoutingProtocolIsProvisioned(d.Id(), connId, meta, ctx); err != nil {
 		return diag.Errorf("error waiting for RP (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -124,7 +125,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol delete. Error %v and response %v", err, resp))
 	}
 
-	err = waitUntilConnectionDeprovisioned(d.Id(), meta, ctx)
+	err = waitUntilRoutingProtocolDeprovisioned(d.Id(), connId, meta, ctx)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("API call failed while waiting for resource deletion. Error %v", err))
 	}
@@ -168,4 +169,71 @@ func setFabricRoutingProtocolMap(d *schema.ResourceData, rp v4.RoutingProtocolDa
 		return diag.FromErr(err)
 	}
 	return diags
+}
+
+func waitUntilRoutingProtocolIsProvisioned(uuid string, connUuid string, meta interface{}, ctx context.Context) error {
+	log.Printf("Waiting for routing protocol to be provisioned, uuid %s", uuid)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			string(v4.PROVISIONING_ConnectionState),
+			string(v4.REPROVISIONING_ConnectionState),
+		},
+		Target: []string{
+			string(v4.PROVISIONED_ConnectionState),
+		},
+		Refresh: func() (interface{}, string, error) {
+			client := meta.(*Config).fabricClient
+			dbConn, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
+			if err != nil {
+				return "", "", err
+			}
+			var state string
+			if dbConn.Type_ == "BGP" {
+				state = dbConn.RoutingProtocolBgpData.State
+			} else if dbConn.Type_ == "DIRECT" {
+				state = dbConn.RoutingProtocolDirectData.State
+			}
+			return dbConn, state, nil
+		},
+		Timeout:    5 * time.Minute,
+		Delay:      30 * time.Second,
+		MinTimeout: 30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
+func waitUntilRoutingProtocolDeprovisioned(uuid string, connUuid string, meta interface{}, ctx context.Context) error {
+	log.Printf("Waiting for routing protocol to be deprovisioned, uuid %s", uuid)
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			string(v4.DEPROVISIONING_ConnectionState),
+		},
+		Target: []string{
+			string(v4.DEPROVISIONED_ConnectionState),
+		},
+		Refresh: func() (interface{}, string, error) {
+			client := meta.(*Config).fabricClient
+			dbConn, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
+			if err != nil {
+				return "", "", err
+			}
+			var state string
+			if dbConn.Type_ == "BGP" {
+				state = dbConn.RoutingProtocolBgpData.State
+			} else if dbConn.Type_ == "DIRECT" {
+				state = dbConn.RoutingProtocolDirectData.State
+			}
+			return dbConn, state, nil
+
+		},
+		Timeout:    5 * time.Minute,
+		Delay:      30 * time.Second,
+		MinTimeout: 30 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
 }
