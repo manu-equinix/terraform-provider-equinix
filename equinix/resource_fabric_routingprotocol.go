@@ -2,18 +2,14 @@ package equinix
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	v4 "github.com/equinix-labs/fabric-go/fabric/v4"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
-
-connId := "temp connection uuid"
 
 func resourceFabricRoutingProtocol() *schema.Resource {
 	return &schema.Resource{
@@ -25,8 +21,8 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 		},
 		ReadContext:   resourceFabricRoutingProtocolRead,
 		CreateContext: resourceFabricRoutingProtocolCreate,
-		UpdateContext: resourceFabricRoutingProtocolUpdate,
-		DeleteContext: resourceFabricRoutingProtocolDelete,
+		//UpdateContext: resourceFabricRoutingProtocolUpdate,
+		//DeleteContext: resourceFabricRoutingProtocolDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,51 +46,62 @@ func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceDa
 		}
 		return diag.FromErr(err)
 	}
-	d.SetId(fabricRoutingProtocol.Uuid,)
+	d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	return setFabricRoutingProtocolMap(d, fabricRoutingProtocol)
 }
 
 func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
-	schemaNotifications := d.Get("notifications").([]interface{})
-	notifications := notificationToFabric(schemaNotifications)
-	schemaOrder := d.Get("order").(*schema.Set).List()
-	order := orderToFabric(schemaOrder)
-	schemaAccount := d.Get("account").(*schema.Set).List()
-	account := accountToFabricGateway(schemaAccount)
-	schemaLocation := d.Get("location").(*schema.Set).List()
-	location := locationToFabricGateway(schemaLocation)
-	project := v4.Project{}
-	schemaProject := d.Get("project").(*schema.Set).List()
-	if len(schemaProject) != 0 {
-		project = projectToFabricGateway(schemaProject)
-	}
-	schemaPackage := d.Get("package").(*schema.Set).List()
-	packages := packageToFabricGateway(schemaPackage)
+	schemaBgpIpv4 := d.Get("bgp_ipv4").(*schema.Set).List()
+	bgpIpv4 := routingProtocolBgpIpv4ToFabric(schemaBgpIpv4)
+	schemaBgpIpv6 := d.Get("bgp_ipv6").(*schema.Set).List()
+	bgpIpv6 := routingProtocolBgpIpv6ToFabric(schemaBgpIpv6)
+	schemaDirectIpv4 := d.Get("direct_ipv4").(*schema.Set).List()
+	directIpv4 := routingProtocolDirectIpv4ToFabric(schemaDirectIpv4)
+	schemaDirectIpv6 := d.Get("direct_ipv6").(*schema.Set).List()
+	DirectIpv6 := routingProtocolDirectIpv6ToFabric(schemaDirectIpv6)
+	schemaBfd := d.Get("bfd").(*schema.Set).List()
+	bfd := routingProtocolBfdToFabric(schemaBfd)
 
-	createRequest := v4.FabricGatewayPostRequest{
-		Name:          d.Get("name").(string),
-		Type_:         d.Get("type").(string),
-		Order:         &order,
-		Location:      &location,
-		Notifications: notifications,
-		Package_:      &packages,
-		Account:       &account,
-		Project: 	   &project,
+	var createRequest = v4.RoutingProtocolBase{
+		Type_: d.Get("type").(string),
+		OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
+			RoutingProtocolBgpType: v4.RoutingProtocolBgpType{
+				Type_:       d.Get("type").(string),
+				Name:        d.Get("name").(string),
+				BgpIpv4:     &bgpIpv4,
+				BgpIpv6:     &bgpIpv6,
+				CustomerAsn: d.Get("customer_asn").(int64),
+				EquinixAsn:  d.Get("equinix_asn").(int64),
+				BgpAuthKey:  d.Get("bgp_auth_key").(string),
+				Bfd:         &bfd,
+			},
+			RoutingProtocolDirectType: v4.RoutingProtocolDirectType{
+				Type_:      d.Get("type").(string),
+				Name:       d.Get("name").(string),
+				DirectIpv4: &directIpv4,
+				DirectIpv6: &DirectIpv6,
+			},
+		},
 	}
-
-	rp, _, err := client.GatewaysApi.CreateGateway(ctx, createRequest)
+	rp, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, "testConnectionId") // fixme: get connectionId
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(fg.Uuid)
 
-	if _, err = waitUntilFGIsProvisioned(d.Id(), meta, ctx); err != nil {
-		return diag.Errorf("error waiting for FG (%s) to be created: %s", d.Id(), err)
+	switch rp.Type_ {
+	case "BGP":
+		d.SetId(rp.RoutingProtocolBgpData.Uuid)
+	case "DIRECT":
+		d.SetId(rp.RoutingProtocolDirectData.Uuid)
 	}
 
-	return resourceFabricGatewayRead(ctx, d, meta)
+	if _, err = waitUntilFGIsProvisioned(d.Id(), meta, ctx); err != nil {
+		return diag.Errorf("error waiting for RP (%s) to be created: %s", d.Id(), err)
+	}
+
+	return resourceFabricRoutingProtocolRead(ctx, d, meta)
 }
 
 func setFabricRoutingProtocolMap(d *schema.ResourceData, rp v4.RoutingProtocolData) diag.Diagnostics {
@@ -102,23 +109,17 @@ func setFabricRoutingProtocolMap(d *schema.ResourceData, rp v4.RoutingProtocolDa
 
 	if rp.Type_ == "BGP" {
 		err := setMap(d, map[string]interface{}{
-			"name":          rp.Name,
-			"href":          rp.Href,
-			"type":          rp.Type_,
-			"state":         rp.State,
-			"directIpv4":    rp.DirectIpv4,
-			"package":       fabricGatewayPackageToTerra(rp.Package_),
-			"location":      locationFGToTerra(fg.Location),
-			"change_log":    changeLogToTerra(fg.ChangeLog),
-			"notifications": notificationToTerra(fg.Notifications),
-			"project":       projectToTerra(fg.Project),
+			"name":    rp.RoutingProtocolBgpData.Name,
+			"href":    rp.RoutingProtocolBgpData.Href,
+			"type":    rp.RoutingProtocolBgpData.Type_,
+			"state":   rp.RoutingProtocolBgpData.State,
+			"bgpIpv4": rp.BgpIpv4,
 		})
 		if err != nil {
 			return diag.FromErr(err)
 		}
 		return diags
 	}
-
 
 	return diags
 }

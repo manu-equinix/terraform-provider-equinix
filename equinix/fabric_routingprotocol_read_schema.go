@@ -2,54 +2,153 @@ package equinix
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"golang.org/x/exp/maps"
 )
 
-func readRoutingProtocolDirectIpv4Sch() map[string]*schema.Schema {
+func readRoutingProtocolBaseSch() map[string]*schema.Schema {
+	rpDataSchema := map[string]*schema.Schema{
+		"type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Routing Protocol configuration type",
+		},
+		//"direct": {
+		//	Type:        schema.TypeSet,
+		//	Required:    true,
+		//	Description: "Routing Protocol configuration for DIRECT",
+		//	Elem: &schema.Resource{
+		//		Schema: createRoutingProtocolDirectTypeSch(),
+		//	},
+		//	ExactlyOneOf: []string{"bgp","direct"},
+		//},
+		//"bgp": {
+		//	Type:        schema.TypeSet,
+		//	Required:    true,
+		//	Description: "Routing Protocol configuration for DIRECT",
+		//	Elem: &schema.Resource{
+		//		Schema: createRoutingProtocolBgpTypeSch(),
+		//	},
+		//	ExactlyOneOf: []string{"bgp","direct"},
+		//},
+	}
+	maps.Copy(rpDataSchema, readRoutingProtocolDirectTypeSch())
+	maps.Copy(rpDataSchema, readRoutingProtocolBgpTypeSch())
+
+	return rpDataSchema
+}
+
+func readRoutingProtocolDirectTypeSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"equinixIfaceIp": {
-			Type: schema.TypeString,
-			Required: true,
+		"type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Defines the routing protocol type as DIRECT",
+		},
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Routing Protocol name. An alpha-numeric 24 characters string which can include only hyphens and underscores",
+		},
+		"direct_ipv4": {
+			Type:        schema.TypeSet,
+			Required:    true,
+			Description: "Routing Protocol Direct IPv4",
+			Elem: &schema.Resource{
+				Schema: readDirectConnectionIpv4Sch(),
+			},
+		},
+		"direct_ipv6": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Routing Protocol Direct IPv6",
+			Elem: &schema.Resource{
+				Schema: readDirectConnectionIpv6Sch(),
+			},
+		},
+	}
+}
+
+func readDirectConnectionIpv4Sch() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"equinix_iface_ip": {
+			Type:        schema.TypeString,
+			Required:    true,
 			Description: "Equinix side Interface IP address",
 		},
 	}
 }
-func readRoutingProtocolDirectIpv6Sch() map[string]*schema.Schema {
+func readDirectConnectionIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"equinixIfaceIp": {
-			Type: schema.TypeString,
-			Required: false,
+		"equinix_iface_ip": {
+			Type:        schema.TypeString,
+			Required:    false,
 			Description: "Equinix side Interface IP address\n\n",
 		},
 	}
 }
-func readRoutingProtocolBgpIpv4Sch() map[string]*schema.Schema {
+
+func readRoutingProtocolBgpTypeSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"customerPeerIp": {
-			Type: schema.TypeString,
-			Required: false,
-			Description: "Customer side peering ip",
+		"type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Defines the routing protocol type as DIRECT",
 		},
-		"equinixPeerIp": {
-			Type: schema.TypeString,
-			Computed: true,
-			Description: "Equinix side peering ip",
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Routing Protocol name. An alpha-numeric 24 characters string which can include only hyphens and underscores",
 		},
-		"enabled": {
-			Type: schema.TypeBool,
-			Optional: true,
-			Default: true,
-			Description: "Admin status for the BGP session",
+		"bgp_ipv4": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Routing Protocol BGP IPv4",
+			Elem: &schema.Resource{
+				Schema: readBgpConnectionIpv4Sch(),
+			},
+		},
+		"bgp_ipv6": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Routing Protocol BGP IPv6",
+			Elem: &schema.Resource{
+				Schema: readBgpConnectionIpv6Sch(),
+			},
+		},
+		"customer_asn": {
+			Type:        schema.TypeInt,
+			Required:    true,
+			Description: "Customer-provided ASN",
+		},
+		"equinix_asn": {
+			Type:        schema.TypeInt,
+			Computed:    true,
+			Description: "Equinix ASN",
+		},
+		"bgp_auth_key": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "BGP authorization key",
+		},
+		"bfd": {
+			Type:        schema.TypeSet,
+			Optional:    true,
+			Description: "Bidirectional Forwarding Detection",
+			Elem: &schema.Resource{
+				Schema: readRoutingProtocolBfdSch(),
+			},
 		},
 	}
 }
-func readRoutingProtocolBgpIpv6Sch() map[string]*schema.Schema {
+
+func readBgpConnectionIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"customerPeerIp": {
+		"customer_peer_ip": {
 			Type:        schema.TypeString,
 			Required:    false,
 			Description: "Customer side peering ip",
 		},
-		"equinixPeerIp": {
+		"equinix_peer_ip": {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "Equinix side peering ip",
@@ -57,7 +156,28 @@ func readRoutingProtocolBgpIpv6Sch() map[string]*schema.Schema {
 		"enabled": {
 			Type:        schema.TypeBool,
 			Optional:    true,
-			Default: 	 true,
+			Default:     true,
+			Description: "Admin status for the BGP session",
+		},
+	}
+}
+
+func readBgpConnectionIpv6Sch() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"customer_peer_ip": {
+			Type:        schema.TypeString,
+			Required:    false,
+			Description: "Customer side peering ip",
+		},
+		"equinix_peer_ip": {
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Equinix side peering ip",
+		},
+		"enabled": {
+			Type:        schema.TypeBool,
+			Optional:    true,
+			Default:     true,
 			Description: "Admin status for the BGP session",
 		},
 	}
@@ -65,14 +185,14 @@ func readRoutingProtocolBgpIpv6Sch() map[string]*schema.Schema {
 func readRoutingProtocolBfdSch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"enabled": {
-			Type: schema.TypeBool,
-			Required: true,
+			Type:        schema.TypeBool,
+			Required:    true,
 			Description: "Bidirectional Forwarding Detection enablement",
 		},
 		"interval": {
-			Type: schema.TypeString,
-			Optional: false,
-			Default: 100,
+			Type:        schema.TypeString,
+			Optional:    false,
+			Default:     100,
 			Description: "Interval range between the received BFD control packets",
 		},
 	}
@@ -97,18 +217,18 @@ func readRoutingProtocolChangeSch() map[string]*schema.Schema {
 		//	Description: "Details of latest Routing Protocol change",
 		//},
 		"uuid": {
-			Type: schema.TypeString,
-			Computed: true,
+			Type:        schema.TypeString,
+			Computed:    true,
 			Description: "Uniquely identifies a change",
 		},
 		"type": {
-			Type: schema.TypeString,
-			Computed: true,
+			Type:        schema.TypeString,
+			Computed:    true,
 			Description: "Type of change",
 		},
 		"href": {
-			Type: schema.TypeString,
-			Computed: true,
+			Type:        schema.TypeString,
+			Computed:    true,
 			Description: "Routing Protocol Change URI",
 		},
 	}
@@ -117,14 +237,14 @@ func readRoutingProtocolChangeSch() map[string]*schema.Schema {
 func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"href": {
-			Type: 			schema.TypeString,
-			Computed: 		true,
-			Description: 	"Routing Protocol URI information",
+			Type:        schema.TypeString,
+			Computed:    true,
+			Description: "Routing Protocol URI information",
 		},
 		"type": {
-			Type:         schema.TypeString,
-			Required:     true,
-			Description:  "Defines the routing protocol type like BGP or DIRECT",
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Defines the routing protocol type like BGP or DIRECT",
 		},
 		"uuid": {
 			Type:        schema.TypeString,
@@ -155,8 +275,8 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			},
 		},
 		"change": {
-			Type: schema.TypeSet,
-			Computed: true,
+			Type:        schema.TypeSet,
+			Computed:    true,
 			Description: "Routing Protocol configuration Changes",
 			Elem: &schema.Resource{
 				Schema: readRoutingProtocolChangeSch(),
@@ -164,35 +284,35 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		},
 		// fixme: questions about primative behaviors for ipv4 and ipv6
 		"direct_ipv4": {
-			Type: schema.TypeSet,
-			Required: true,
+			Type:        schema.TypeSet,
+			Required:    true,
 			Description: "Routing Protocol Direct IPv4",
 			Elem: &schema.Resource{
-				Schema: readRoutingProtocolDirectIpv4Sch(),
+				Schema: readDirectConnectionIpv4Sch(),
 			},
 		},
 		"direct_ipv6": {
-			Type: schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
 			Description: "Routing Protocol Direct IPv6",
 			Elem: &schema.Resource{
-				Schema: readRoutingProtocolDirectIpv6Sch(),
+				Schema: readDirectConnectionIpv6Sch(),
 			},
 		},
 		"bgp_ipv4": {
-			Type: schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
 			Description: "Routing Protocol BGP IPv4",
 			Elem: &schema.Resource{
-				Schema: readRoutingProtocolBgpIpv4Sch(),
+				Schema: readBgpConnectionIpv4Sch(),
 			},
 		},
 		"bgp_ipv6": {
-			Type: schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
 			Description: "Routing Protocol BGP IPv6",
 			Elem: &schema.Resource{
-				Schema: readRoutingProtocolBgpIpv6Sch(),
+				Schema: readBgpConnectionIpv6Sch(),
 			},
 		},
 		"customer_asn": {
@@ -206,13 +326,13 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Description: "Equinix ASN",
 		},
 		"bgp_auth_key": {
-			Type: schema.TypeString,
-			Optional: true,
+			Type:        schema.TypeString,
+			Optional:    true,
 			Description: "BGP authorization key",
 		},
 		"bfd": {
-			Type: schema.TypeSet,
-			Optional: true,
+			Type:        schema.TypeSet,
+			Optional:    true,
 			Description: "Bidirectional Forwarding Detection",
 			Elem: &schema.Resource{
 				Schema: readRoutingProtocolBfdSch(),

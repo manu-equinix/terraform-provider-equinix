@@ -3,7 +3,44 @@ package equinix
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"golang.org/x/exp/maps"
 )
+
+var createRoutingProtocolBaseRes = &schema.Resource{
+	Schema: createRoutingProtocolBaseSch(),
+}
+
+func createRoutingProtocolBaseSch() map[string]*schema.Schema {
+	rpDataSchema := map[string]*schema.Schema{
+		"type": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Routing Protocol configuration type",
+		},
+		//"direct": {
+		//	Type:        schema.TypeSet,
+		//	Required:    true,
+		//	Description: "Routing Protocol configuration for DIRECT",
+		//	Elem: &schema.Resource{
+		//		Schema: createRoutingProtocolDirectTypeSch(),
+		//	},
+		//	ExactlyOneOf: []string{"bgp","direct"},
+		//},
+		//"bgp": {
+		//	Type:        schema.TypeSet,
+		//	Required:    true,
+		//	Description: "Routing Protocol configuration for DIRECT",
+		//	Elem: &schema.Resource{
+		//		Schema: createRoutingProtocolBgpTypeSch(),
+		//	},
+		//	ExactlyOneOf: []string{"bgp","direct"},
+		//},
+	}
+	maps.Copy(rpDataSchema, createRoutingProtocolDirectTypeSch())
+	maps.Copy(rpDataSchema, createRoutingProtocolBgpTypeSch())
+
+	return rpDataSchema
+}
 
 var createRoutingProtocolDirectTypeRes = &schema.Resource{
 	Schema: createRoutingProtocolDirectTypeSch(),
@@ -46,7 +83,7 @@ var createDirectConnectionIpv4Res = &schema.Resource{
 
 func createDirectConnectionIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"equinixIfaceIp": {
+		"equinix_iface_ip": {
 			Type:        schema.TypeString,
 			Required:    true,
 			Description: "Equinix side Interface IP address",
@@ -60,7 +97,7 @@ var createDirectConnectionIpv6Res = &schema.Resource{
 
 func createDirectConnectionIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"equinixIfaceIp": {
+		"equinix_iface_ip": {
 			Type:        schema.TypeString,
 			Required:    false,
 			Description: "Equinix side Interface IP address\n\n",
@@ -125,18 +162,19 @@ func createRoutingProtocolBgpTypeSch() map[string]*schema.Schema {
 		},
 	}
 }
+
 var createBgpConnectionIpv4Res = &schema.Resource{
 	Schema: createBgpConnectionIpv4Sch(),
 }
 
 func createBgpConnectionIpv4Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"customerPeerIp": {
+		"customer_peer_ip": {
 			Type:        schema.TypeString,
 			Required:    false,
 			Description: "Customer side peering ip",
 		},
-		"equinixPeerIp": {
+		"equinix_peer_ip": {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "Equinix side peering ip",
@@ -156,12 +194,12 @@ var createBgpConnectionIpv6Res = &schema.Resource{
 
 func createBgpConnectionIpv6Sch() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"customerPeerIp": {
+		"customer_peer_ip": {
 			Type:        schema.TypeString,
 			Required:    false,
 			Description: "Customer side peering ip",
 		},
-		"equinixPeerIp": {
+		"equinix_peer_ip": {
 			Type:        schema.TypeString,
 			Computed:    true,
 			Description: "Equinix side peering ip",
