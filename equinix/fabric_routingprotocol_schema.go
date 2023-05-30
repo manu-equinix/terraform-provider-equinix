@@ -295,18 +295,19 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		},
 		"type": {
 			Type:         schema.TypeString,
-			Required:     true,
+			Optional:     true,
 			ValidateFunc: validation.StringInSlice([]string{"BGP", "DIRECT"}, true),
 			Description:  "Defines the routing protocol type like BGP or DIRECT",
 		},
 		"uuid": {
 			Type:        schema.TypeString,
+			Optional:    true,
 			Computed:    true,
 			Description: "Equinix-assigned routing protocol identifier",
 		},
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Routing Protocol name. An alpha-numeric 24 characters string which can include only hyphens and underscores",
 		},
 		"description": {
@@ -315,9 +316,8 @@ func createFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 			Description: "Customer-provided Fabric Routing Protocol description",
 		},
 		"state": {
-			Type:     schema.TypeString,
-			Computed: true,
-			//ValidateFunc: validation.StringInSlice([]string{"PROVISIONED", "DEPROVISIONED", "PROVISIONING", "DEPROVISIONING", "REPROVISIONING", "FAILED"}, true),
+			Type:        schema.TypeString,
+			Computed:    true,
 			Description: "Routing Protocol overall state",
 		},
 		"operation": {

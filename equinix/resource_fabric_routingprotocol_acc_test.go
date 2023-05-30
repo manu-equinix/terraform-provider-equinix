@@ -55,8 +55,6 @@ func TestAccFabricCreateBgpRoutingProtocol(t *testing.T) {
 				Config: testAccFabricCreateRoutingProtocolBgpConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "10.10.100.2", "172::1:2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"equinix_fabric_routingprotocol.test", "name", fmt.Sprint("fabric_tf_acc_test_rpBgp")),
-					resource.TestCheckResourceAttr(
 						"equinix_fabric_routingprotocol.test", "data.direct_ipv4.equinix_iface_ip", fmt.Sprint("10.10.100.1/26")),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,7 +68,6 @@ func testAccFabricCreateRoutingProtocolBgpConfig(connectionUuid string, ipv4 str
 		connection_uuid = "%s"
 
 		type = "BGP"
-		name = "fabric_tf_acc_test_rpBgp"
 		bgp_ipv4{
 			customer_peer_ip = "%s"
 		}
@@ -88,7 +85,7 @@ func checkRoutingProtocolDelete(s *terraform.State) error {
 		if rs.Type != "equinix_fabric_routingprotocol" {
 			continue
 		}
-		err := waitUntilRoutingProtocolDeprovisioned(rs.Primary.ID, rs.Primary.Attributes["connection_uuid"], testAccProvider.Meta(), ctx) // fixme: connUuid
+		err := waitUntilRoutingProtocolDeprovisioned(rs.Primary.ID, rs.Primary.Attributes["connection_uuid"], testAccProvider.Meta(), ctx)
 		if err != nil {
 			return fmt.Errorf("API call failed while waiting for resource deletion")
 		}
@@ -102,19 +99,21 @@ func TestAccFabricReadRoutingProtocol(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricReadRoutingProtocolConfig(),
+				Config: testAccFabricReadRoutingProtocolConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "84755bd3-3c42-4db7-9141-7ce52c8675ef"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.equinix_fabric_routingprotocol.test", "name", fmt.Sprint("fabric_tf_acc_test")),
+						"equinix_fabric_routingprotocol.test", "type", fmt.Sprint("DIRECT")),
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_routingprotocol.test", "state", fmt.Sprint("PROVISIONED")),
 				),
 			},
 		},
 	})
 }
 
-func testAccFabricReadRoutingProtocolConfig() string {
-	return fmt.Sprint(`data "equinix_fabric_routingprotocol" "test" {
-	uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
-	connection_uuid = "3d205bfa-1064-4d5b-a199-2908de84999e"
-	}`) // todo: can you add connUuid as an extra and use it in resource??? - update i think this is it
+func testAccFabricReadRoutingProtocolConfig(connectionUuid string, routingProtocolUuid string) string {
+	return fmt.Sprintf(`data "equinix_fabric_routingprotocol" "test" {
+	connection_uuid = "%s"
+	uuid = "%s"
+	}`, connectionUuid, routingProtocolUuid)
 }
