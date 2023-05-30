@@ -77,6 +77,7 @@ func testAccFabricCreateRoutingProtocolBgpConfig(connectionUuid string, ipv4 str
 		bgp_ipv6{
 			customer_peer_ip = "%s"
 		}
+		customer_asn = "100"
 	}`, connectionUuid, ipv4, ipv6)
 }
 
