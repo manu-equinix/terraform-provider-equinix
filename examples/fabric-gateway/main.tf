@@ -2,11 +2,7 @@ provider "equinix" {
   client_id     = var.equinix_client_id
   client_secret = var.equinix_client_secret
 }
-data "equinix_fabric_ports" "zside" {
-  filters {
-    name = var.zside_port_name
-  }
-}
+
 resource "equinix_fabric_gateway" "test"{
   name = var.fg_name
   type = var.fg_type

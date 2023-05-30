@@ -10,13 +10,3 @@ variable "fg_location" {}
 variable "fg_package" {}
 variable "fg_project" {}
 variable "fg_account" {}
-variable "connection_name" {}
-variable "connection_type" {}
-variable "bandwidth" {}
-variable "redundancy" {}
-variable "aside_ap_type" {}
-variable "zside_ap_type" {}
-variable "zside_link_protocol_type" {}
-variable "zside_link_protocol_tag" {}
-variable "zside_location" {}
-variable "zside_port_name" {}
