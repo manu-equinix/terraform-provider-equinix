@@ -45,10 +45,10 @@ func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceDa
 		}
 		return diag.FromErr(err)
 	}
-	switch fabricRoutingProtocol.Type_ {
-	case "BGP":
+	if fabricRoutingProtocol.Type_ == "BGP" {
 		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
-	case "DIRECT":
+	}
+	if fabricRoutingProtocol.Type_ == "DIRECT" {
 		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 	return setFabricRoutingProtocolMap(d, fabricRoutingProtocol)
@@ -67,7 +67,6 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 	DirectIpv6 := routingProtocolDirectIpv6ToFabric(schemaDirectIpv6)
 	schemaBfd := d.Get("bfd").(*schema.Set).List()
 	bfd := routingProtocolBfdToFabric(schemaBfd)
-
 	bgpAuthKey := d.Get("bgp_auth_key")
 	if bgpAuthKey == nil {
 		bgpAuthKey = ""
@@ -104,37 +103,15 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 			},
 		}
 	}
-
-	//createRequest := v4.RoutingProtocolBase{	// fixme: this is the payload use either type
-	//	Type_: d.Get("type").(string),
-	//	OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
-	//		RoutingProtocolBgpType: v4.RoutingProtocolBgpType{
-	//			Type_:       d.Get("type").(string),
-	//			Name:        d.Get("name").(string),
-	//			BgpIpv4:     &bgpIpv4,
-	//			BgpIpv6:     &bgpIpv6,
-	//			CustomerAsn: int64(d.Get("customer_asn").(int)),
-	//			EquinixAsn:  int64(d.Get("equinix_asn").(int)),
-	//			BgpAuthKey:  bgpAuthKey.(string),
-	//			Bfd:         &bfd,
-	//		},
-	//		RoutingProtocolDirectType: v4.RoutingProtocolDirectType{
-	//			Type_:      d.Get("type").(string),
-	//			Name:       d.Get("name").(string),
-	//			DirectIpv4: &directIpv4,
-	//			DirectIpv6: &DirectIpv6,
-	//		},
-	//	},
-	//}
 	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connection_uuid").(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	switch fabricRoutingProtocol.Type_ {
-	case "BGP":
+	if fabricRoutingProtocol.Type_ == "BGP" {
 		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
-	case "DIRECT":
+	}
+	if fabricRoutingProtocol.Type_ == "DIRECT" {
 		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 

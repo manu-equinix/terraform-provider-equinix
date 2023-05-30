@@ -20,9 +20,14 @@ func TestAccFabricCreateDirectRoutingProtocol(t *testing.T) {
 				Config: testAccFabricCreateRoutingProtocolDirectConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "10.10.100.1/26", "172::1:1/126"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"equinix_fabric_routingprotocol.test", "name", fmt.Sprint("fabric_tf_acc_test_rpDirect")),
-					resource.TestCheckResourceAttr(
 						"equinix_fabric_routingprotocol.test", "data.direct_ipv4.equinix_iface_ip", fmt.Sprint("10.10.100.1/26")),
+				),
+				ExpectNonEmptyPlan: true,
+			},{
+				Config: testAccFabricCreateRoutingProtocolDirectConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "192.168.200.201/26", "172::1:1/126"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"equinix_fabric_routingprotocol.test", "data.direct_ipv4.equinix_iface_ip", fmt.Sprint("192.168.200.201/26")),
 				),
 				ExpectNonEmptyPlan: true,
 			},
