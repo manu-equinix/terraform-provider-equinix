@@ -21,10 +21,10 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 			Delete: schema.DefaultTimeout(6 * time.Minute),
 			Read:   schema.DefaultTimeout(6 * time.Minute),
 		},
-		ReadContext:   resourceFabricRoutingProtocolRead,
-		CreateContext: resourceFabricRoutingProtocolCreate,
-		UpdateContext: resourceFabricRoutingProtocolUpdate,
-		DeleteContext: resourceFabricRoutingProtocolDelete,
+		ReadContext:   resourceFabricRoutingProtocolRead,   // get by id
+		CreateContext: resourceFabricRoutingProtocolCreate, // post nonbulk
+		UpdateContext: resourceFabricRoutingProtocolUpdate, // patch bgp enable
+		DeleteContext: resourceFabricRoutingProtocolDelete, // delete by id
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -73,27 +73,59 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 		bgpAuthKey = ""
 	}
 
-	createRequest := v4.RoutingProtocolBase{
-		Type_: d.Get("type").(string),
-		OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
-			RoutingProtocolBgpType: v4.RoutingProtocolBgpType{
-				Type_:       d.Get("type").(string),
-				Name:        d.Get("name").(string),
-				BgpIpv4:     &bgpIpv4,
-				BgpIpv6:     &bgpIpv6,
-				CustomerAsn: int64(d.Get("customer_asn").(int)),
-				EquinixAsn:  int64(d.Get("equinix_asn").(int)),
-				BgpAuthKey:  bgpAuthKey.(string),
-				Bfd:         &bfd,
+	createRequest := v4.RoutingProtocolBase{}
+	if d.Get("type").(string) == "BGP" {
+		createRequest = v4.RoutingProtocolBase{
+			Type_: d.Get("type").(string),
+			OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
+				RoutingProtocolBgpType: v4.RoutingProtocolBgpType{
+					Type_:       d.Get("type").(string),
+					Name:        d.Get("name").(string),
+					BgpIpv4:     &bgpIpv4,
+					BgpIpv6:     &bgpIpv6,
+					CustomerAsn: int64(d.Get("customer_asn").(int)),
+					EquinixAsn:  int64(d.Get("equinix_asn").(int)),
+					BgpAuthKey:  bgpAuthKey.(string),
+					Bfd:         &bfd,
+				},
 			},
-			RoutingProtocolDirectType: v4.RoutingProtocolDirectType{
-				Type_:      d.Get("type").(string),
-				Name:       d.Get("name").(string),
-				DirectIpv4: &directIpv4,
-				DirectIpv6: &DirectIpv6,
-			},
-		},
+		}
 	}
+	if d.Get("type").(string) == "DIRECT" {
+		createRequest = v4.RoutingProtocolBase{
+			Type_: d.Get("type").(string),
+			OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
+				RoutingProtocolDirectType: v4.RoutingProtocolDirectType{
+					Type_:      d.Get("type").(string),
+					Name:       d.Get("name").(string),
+					DirectIpv4: &directIpv4,
+					DirectIpv6: &DirectIpv6,
+				},
+			},
+		}
+	}
+
+	//createRequest := v4.RoutingProtocolBase{	// fixme: this is the payload use either type
+	//	Type_: d.Get("type").(string),
+	//	OneOfRoutingProtocolBase: v4.OneOfRoutingProtocolBase{
+	//		RoutingProtocolBgpType: v4.RoutingProtocolBgpType{
+	//			Type_:       d.Get("type").(string),
+	//			Name:        d.Get("name").(string),
+	//			BgpIpv4:     &bgpIpv4,
+	//			BgpIpv6:     &bgpIpv6,
+	//			CustomerAsn: int64(d.Get("customer_asn").(int)),
+	//			EquinixAsn:  int64(d.Get("equinix_asn").(int)),
+	//			BgpAuthKey:  bgpAuthKey.(string),
+	//			Bfd:         &bfd,
+	//		},
+	//		RoutingProtocolDirectType: v4.RoutingProtocolDirectType{
+	//			Type_:      d.Get("type").(string),
+	//			Name:       d.Get("name").(string),
+	//			DirectIpv4: &directIpv4,
+	//			DirectIpv6: &DirectIpv6,
+	//		},
+	//	},
+	//}
 	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connection_uuid").(string))
 	if err != nil {
 		return diag.FromErr(err)

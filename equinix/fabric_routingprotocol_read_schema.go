@@ -293,7 +293,7 @@ func readFabricRoutingProtocolResourceSchema() map[string]*schema.Schema {
 		},
 		"direct_ipv4": {
 			Type:        schema.TypeSet,
-			Required:    true,
+			Optional:    true,
 			Description: "Routing Protocol Direct IPv4",
 			Elem: &schema.Resource{
 				Schema: readDirectConnectionIpv4Sch(),
