@@ -1,38 +1,37 @@
-# ECX Fabric Layer2 Connection between two own ports
+# ECX Fabric Gateway CRUD operations
+This example shows how to create Fabric Gateway.
 
-This example shows how create layer 2 connection between two, own ECX Fabric ports.
+Note: Each time you need to create a new Fabric Gateway resource, 
+make a copy of the base folder - examples/fabric-gateway/ and CD into this folder to perform all the CRUD operations.
 
-## Adjust variables
+## Define values for the Fabric Gateway create
 At minimum, you must set below variables in `terraform.tfvars` file:
-
-* `equinix_client_id` - Equinix client ID (consumer key), obtained after
+  - `equinix_client_id` - Equinix client ID (consumer key), obtained after
   registering app in the developer platform
-* `equinix_client_secret` - Equinix client secret ID (consumer secret),
+  - `equinix_client_secret` - Equinix client secret ID (consumer secret),
   obtained same way as above
-
-`aside_port_name` - Name of ECX Fabric a-side port i.e. ops-user100-CX-SV5-NL-Qinq-STD-1G-SEC-JP-111
-`zside_port_name` -  Name of ECX Fabric z-side port , i.e. ops-user100-CX-SV5-NL-Qinq-BO-10G-SEC-JP-000
-
-`connection_name` - the name of the connection
-`connection_type` - connection type, please refer schema
-`notifications_type` - notification type
-`notifications_emails` - List of emails
-`bandwidth` - bandwidth in MBs
-`redundancy` - Port redundancy
-`aside_ap_type` - Access point type
-`aside_port_uuid` - Port uuid, fetched based on port call using Port resource
-`aside_link_protocol_type` - link protocol type
-`aside_link_protocol_stag` - a-side s tag number
-`zside_ap_type` - Z side access point type
-`aside_link_protocol_stag` - z-side s tag number
-`zside_location` - Seller location
+  - `fg_name` - Name of ECX Fabric Gateway on a-side , i.e. amcrh007-fg
+  - `fg_type` - Fabric Gateway type
+  - `fg_location` - Fabric Gateway location
+  - `fg_project` - Fabric Gateway project
+  - `fg_account` - Fabric Gateway account
+  - `fg_package` - Fabric Gateway package type, i.e. PRO
+  - `notifications_type` - notification type
+  - `notifications_emails` - List of emails
 
 ## Initialize
+- First step is to initialize the terraform directory/resource we are going to work on.
+In the given example, the folder to perform CRUD operations on an FG resource can be found at examples/fabric-gateway/.
 
-Change directory to project root to run terra test or change to example directory and initialize Terraform plugins
-by running `terraform init`.
+- Change directory into - `CD examples/fabric-gateway/`
+- Initialize Terraform plugins - `terraform init`
 
-## Deploy template
+## Fabric Gateway : Create, Read, Update and Delete(CRUD) operations
+ Note: `–auto-approve` command does not prompt the user for validating the applying config. Remove it to get a prompt to confirm the operation.
 
-Apply changes by running `terraform apply`, then **inspect proposed plan**
-and approve it.
+| Operation |              Command              |                                                               Description |
+|:----------|:---------------------------------:|--------------------------------------------------------------------------:|
+| CREATE    |  `terraform apply –auto-approve`  |                                                    Creates an FG resource |
+| READ      |         `terraform show`          |                          Reads/Shows the current state of the FG resource |
+| UPDATE    |    `terraform apply -refresh`     | Updates the FG resource with values provided in the terraform.tfvars file |
+| DELETE    | `terraform destroy –auto-approve` |                                           Deletes the created FG resource |
