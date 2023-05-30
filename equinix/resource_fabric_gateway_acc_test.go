@@ -101,29 +101,3 @@ func testAccFabricGatewayReadConfig() string {
 		uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
 	}`)
 }
-
-//
-//func TestAccFabricGatewayUpdate(t *testing.T) {
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck:  func() { testAccPreCheck(t) },
-//		Providers: testAccProviders,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccFabricGatewayUpdateConfig("fg_tf_test_Update"),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttr(
-//						"equinix_fabric_gateway.test", "name", fmt.Sprint("fg_tf_test_Update")),
-//				),
-//			},
-//		},
-//	})
-//}
-//
-//func testAccFabricGatewayUpdateConfig(name string) string {
-//	return fmt.Sprintf(`data "equinix_fabric_gateway" "test"{
-//		uuid = "3e91216d-526a-45d2-9029-0c8c8ba48b60"
-//		op = "replace"
-//		path = "/name"
-//		value = %s
-//	}`, name)
-//}
