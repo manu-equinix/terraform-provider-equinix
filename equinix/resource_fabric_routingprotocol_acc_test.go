@@ -72,10 +72,10 @@ func testAccFabricCreateRoutingProtocolBgpConfig(connectionUuid string, ipv4 str
 		type = "BGP"
 		name = "fabric_tf_acc_test_rpBgp"
 		bgp_ipv4{
-			customer_peering_ip = "%s"
+			customer_peer_ip = "%s"
 		}
 		bgp_ipv6{
-			customer_peering_ip = "%s"
+			customer_peer_ip = "%s"
 		}
 	}`, connectionUuid, ipv4, ipv6)
 }
