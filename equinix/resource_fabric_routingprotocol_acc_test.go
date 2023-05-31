@@ -19,10 +19,15 @@ func TestAccFabricCreateDirectRoutingProtocol(t *testing.T) {
 			{
 				Config: testAccFabricCreateRoutingProtocolDirectConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "10.10.100.1/26", "172::1:1/126"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_routingprotocol.test", "name", fmt.Sprint("fabric_tf_acc_test_rpDirect")),
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_routingprotocol.test", "data.direct_ipv4.equinix_iface_ip", fmt.Sprint("10.10.100.1/26")),
+					resource.TestCheckTypeSetElemAttr(
+						"equinix_fabric_routingprotocol.test", "direct_ipv4.equinix_iface_ip", fmt.Sprint("10.10.100.1/26")),
+				),
+				ExpectNonEmptyPlan: true,
+			}, {
+				Config: testAccFabricCreateRoutingProtocolDirectConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "192.168.200.201/26", "172::1:1/126"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckTypeSetElemAttr(
+						"equinix_fabric_routingprotocol.test", "direct_ipv4.equinix_iface_ip", fmt.Sprint("192.168.200.201/26")),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -52,10 +57,17 @@ func TestAccFabricCreateBgpRoutingProtocol(t *testing.T) {
 		CheckDestroy: checkRoutingProtocolDelete,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricCreateRoutingProtocolBgpConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "10.10.100.2", "172::1:2"),
+				Config: testAccFabricCreateRoutingProtocolBgpConfig("ee52dbd1-2193-4a6b-a869-5121ae739dc9", "180.1.1.2", "172::1:2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"equinix_fabric_routingprotocol.test", "data.direct_ipv4.equinix_iface_ip", fmt.Sprint("10.10.100.1/26")),
+					resource.TestCheckTypeSetElemAttr("equinix_fabric_routingprotocol.test", "bgp_ipv4.customer_peer_ip", fmt.Sprintf("180.1.1.2")),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccFabricCreateRoutingProtocolBgpConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "180.1.1.3", "172::1:2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckTypeSetElemAttr(
+						"equinix_fabric_routingprotocol.test", "bgp_ipv4.customer_peer_ip", fmt.Sprint("10.10.100.2")),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,7 +97,7 @@ func checkRoutingProtocolDelete(s *terraform.State) error {
 		if rs.Type != "equinix_fabric_routingprotocol" {
 			continue
 		}
-		err := waitUntilRoutingProtocolDeprovisioned(rs.Primary.ID, rs.Primary.Attributes["connection_uuid"], testAccProvider.Meta(), ctx)
+		err := waitUntilRoutingProtocolIsDeprovisioned(rs.Primary.ID, rs.Primary.Attributes["connection_uuid"], testAccProvider.Meta(), ctx)
 		if err != nil {
 			return fmt.Errorf("API call failed while waiting for resource deletion")
 		}
@@ -93,13 +105,13 @@ func checkRoutingProtocolDelete(s *terraform.State) error {
 	return nil
 }
 
-func TestAccFabricReadRoutingProtocol(t *testing.T) {
+func TestAccFabricReadRoutingProtocolByUuid(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricReadRoutingProtocolConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "84755bd3-3c42-4db7-9141-7ce52c8675ef"),
+				Config: testAccFabricReadRoutingProtocolConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "00f48313-ab13-4524-aaad-93c31b5b8848"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"equinix_fabric_routingprotocol.test", "type", fmt.Sprint("DIRECT")),
