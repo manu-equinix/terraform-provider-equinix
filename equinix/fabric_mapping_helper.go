@@ -1082,7 +1082,7 @@ func routingProtocolChangeToTerra(routingProtocolChange *v4.RoutingProtocolChang
 	return rpChangeSet
 }
 
-func getRoutingProtocolUpdateRequest(rp v4.RoutingProtocolData, d *schema.ResourceData) (v4.ConnectionChangeOperation, error) {
+func getRoutingProtocolPatchUpdateRequest(rp v4.RoutingProtocolData, d *schema.ResourceData) (v4.ConnectionChangeOperation, error) {
 	changeOps := v4.ConnectionChangeOperation{}
 	existingBgpIpv4Status := rp.BgpIpv4.Enabled
 	existingBgpIpv6Status := rp.BgpIpv6.Enabled
