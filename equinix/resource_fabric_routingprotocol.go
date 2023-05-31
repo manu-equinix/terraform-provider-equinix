@@ -46,12 +46,7 @@ func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceDa
 		}
 		return diag.FromErr(err)
 	}
-	if fabricRoutingProtocol.Type_ == "BGP" {
-		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
-	}
-	if fabricRoutingProtocol.Type_ == "DIRECT" {
-		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
-	}
+
 	return setFabricRoutingProtocolMap(d, fabricRoutingProtocol)
 }
 
@@ -109,10 +104,10 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	if fabricRoutingProtocol.Type_ == "BGP" {
+	switch fabricRoutingProtocol.Type_ {
+	case "BGP":
 		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
-	}
-	if fabricRoutingProtocol.Type_ == "DIRECT" {
+	case "DIRECT":
 		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
 	}
 
@@ -189,22 +184,14 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol replace update, response %v, error %v", res, err))
 	}
-	_, err = waitForRoutingProtocolPatchUpdateCompletion(updatedRpResp.RoutingProtocolBgpData.Change.Uuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 
+	_, err = waitForRoutingProtocolUpdateCompletion(updatedRpResp.RoutingProtocolBgpData.Change.Uuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
 		if !strings.Contains(err.Error(), "500") {
 			d.SetId("")
 		}
 		return diag.FromErr(fmt.Errorf("errored while waiting for successful connection replace update, response %v, error %v", res, err))
 	}
-
-	switch updatedRpResp.Type_ {
-	case "BGP":
-		d.SetId(updatedRpResp.RoutingProtocolBgpData.Uuid)
-	case "DIRECT":
-		d.SetId(updatedRpResp.RoutingProtocolDirectData.Uuid)
-	}
-
 	if _, err = waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx); err != nil {
 		return diag.Errorf("error waiting for RP (%s) to be replace updated: %s", d.Id(), err)
 	}
@@ -232,6 +219,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("API call failed while waiting for resource deletion. Error %v", err))
 	}
+
 	return diags
 }
 
@@ -271,6 +259,7 @@ func setFabricRoutingProtocolMap(d *schema.ResourceData, rp v4.RoutingProtocolDa
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
 	return diags
 }
 
@@ -309,6 +298,7 @@ func waitUntilRoutingProtocolIsProvisioned(uuid string, connUuid string, meta in
 	if err == nil {
 		dbConn = inter.(v4.RoutingProtocolData)
 	}
+
 	return dbConn, err
 }
 
@@ -364,37 +354,7 @@ func waitUntilRoutingProtocolIsDeprovisioned(uuid string, connUuid string, meta 
 	return err
 }
 
-func waitForRoutingProtocolReplaceUpdateCompletion(rpChangeUuid string, uuid string, connUuid string, meta interface{}, ctx context.Context) (v4.RoutingProtocolData, error) {
-	log.Printf("Waiting for routing protocol update to complete, uuid %s", uuid)
-	stateConf := &resource.StateChangeConf{
-		Target: []string{"COMPLETED"},
-		Refresh: func() (interface{}, string, error) {
-			client := meta.(*Config).fabricClient
-			dbConn, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolsChangeByUuid(ctx, connUuid, uuid, rpChangeUuid)
-			if err != nil {
-				return "", "", err
-			}
-			updatableState := ""
-			if dbConn.Status == "COMPLETED" {
-				updatableState = dbConn.Status
-			}
-			return dbConn, updatableState, nil
-		},
-		Timeout:    2 * time.Minute,
-		Delay:      30 * time.Second,
-		MinTimeout: 30 * time.Second,
-	}
-
-	inter, err := stateConf.WaitForStateContext(ctx)
-	dbConn := v4.RoutingProtocolData{}
-
-	if err == nil {
-		dbConn = inter.(v4.RoutingProtocolData)
-	}
-	return dbConn, err
-}
-
-func waitForRoutingProtocolPatchUpdateCompletion(rpChangeUuid string, uuid string, connUuid string, meta interface{}, ctx context.Context) (v4.RoutingProtocolChangeData, error) {
+func waitForRoutingProtocolUpdateCompletion(rpChangeUuid string, uuid string, connUuid string, meta interface{}, ctx context.Context) (v4.RoutingProtocolChangeData, error) {
 	log.Printf("Waiting for routing protocol update to complete, uuid %s", uuid)
 	stateConf := &resource.StateChangeConf{
 		Target: []string{"COMPLETED"},
