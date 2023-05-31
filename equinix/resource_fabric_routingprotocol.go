@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -227,7 +228,7 @@ func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol delete. Error %v and response %v", err, resp))
 	}
 
-	err = waitUntilRoutingProtocolDeprovisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx)
+	err = waitUntilRoutingProtocolIsDeprovisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("API call failed while waiting for resource deletion. Error %v", err))
 	}
@@ -311,34 +312,53 @@ func waitUntilRoutingProtocolIsProvisioned(uuid string, connUuid string, meta in
 	return dbConn, err
 }
 
-func waitUntilRoutingProtocolDeprovisioned(uuid string, connUuid string, meta interface{}, ctx context.Context) error {
+func waitUntilRoutingProtocolIsDeprovisioned(uuid string, connUuid string, meta interface{}, ctx context.Context) error {
 	log.Printf("Waiting for routing protocol to be deprovisioned, uuid %s", uuid)
+
+	/* check if resource is not found */
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			string(v4.DEPROVISIONING_ConnectionState),
-		},
 		Target: []string{
-			string(v4.DEPROVISIONED_ConnectionState),
+			strconv.Itoa(404),
 		},
 		Refresh: func() (interface{}, string, error) {
 			client := meta.(*Config).fabricClient
-			dbConn, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
-			if err != nil {
-				return "", "", err
-			}
-			var state string
-			if dbConn.Type_ == "BGP" {
-				state = dbConn.RoutingProtocolBgpData.State
-			} else if dbConn.Type_ == "DIRECT" {
-				state = dbConn.RoutingProtocolDirectData.State
-			}
-			return dbConn, state, nil
+			dbConn, resp, _ := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
+			// ignore error for Target
+			return dbConn, strconv.Itoa(resp.StatusCode), nil
 
 		},
 		Timeout:    5 * time.Minute,
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,
 	}
+
+	///* check if state is DEPROVISIONED */
+	//stateConf := &resource.StateChangeConf{
+	//	Pending: []string{
+	//		string(v4.DEPROVISIONING_ConnectionState),
+	//	},
+	//	Target: []string{
+	//		string(v4.DEPROVISIONED_ConnectionState),
+	//	},
+	//	Refresh: func() (interface{}, string, error) {
+	//		client := meta.(*Config).fabricClient
+	//		dbConn, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
+	//		if err != nil {
+	//			return "", "", err
+	//		}
+	//		var state string
+	//		if dbConn.Type_ == "BGP" {
+	//			state = dbConn.RoutingProtocolBgpData.State
+	//		} else if dbConn.Type_ == "DIRECT" {
+	//			state = dbConn.RoutingProtocolDirectData.State
+	//		}
+	//		return dbConn, state, nil
+	//
+	//	},
+	//	Timeout:    5 * time.Minute,
+	//	Delay:      30 * time.Second,
+	//	MinTimeout: 30 * time.Second,
+	//}
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err
