@@ -46,6 +46,12 @@ func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceDa
 		}
 		return diag.FromErr(err)
 	}
+	switch fabricRoutingProtocol.Type_ {
+	case "BGP":
+		d.SetId(fabricRoutingProtocol.RoutingProtocolBgpData.Uuid)
+	case "DIRECT":
+		d.SetId(fabricRoutingProtocol.RoutingProtocolDirectData.Uuid)
+	}
 
 	return setFabricRoutingProtocolMap(d, fabricRoutingProtocol)
 }
@@ -196,8 +202,10 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 	switch updatedRpResp.Type_ {
 	case "BGP":
 		changeUuid = updatedRpResp.RoutingProtocolBgpData.Change.Uuid
+		d.SetId(updatedRpResp.RoutingProtocolBgpData.Uuid)
 	case "DIRECT":
 		changeUuid = updatedRpResp.RoutingProtocolDirectData.Change.Uuid
+		d.SetId(updatedRpResp.RoutingProtocolDirectData.Uuid)
 	}
 	_, err = waitForRoutingProtocolUpdateCompletion(changeUuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
@@ -206,11 +214,12 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 		}
 		return diag.FromErr(fmt.Errorf("errored while waiting for successful connection replace update, response %v, error %v", res, err))
 	}
-	if _, err = waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx); err != nil {
+	updatedProvisionedRpResp, err := waitUntilRoutingProtocolIsProvisioned(d.Id(), d.Get("connection_uuid").(string), meta, ctx)
+	if err != nil {
 		return diag.Errorf("error waiting for RP (%s) to be replace updated: %s", d.Id(), err)
 	}
 
-	return setFabricRoutingProtocolMap(d, updatedRpResp)
+	return setFabricRoutingProtocolMap(d, updatedProvisionedRpResp)
 }
 
 func resourceFabricRoutingProtocolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
