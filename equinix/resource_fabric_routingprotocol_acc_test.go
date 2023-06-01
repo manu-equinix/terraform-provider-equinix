@@ -17,17 +17,19 @@ func TestAccFabricCreateDirectRoutingProtocol(t *testing.T) {
 		CheckDestroy: checkRoutingProtocolDelete,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricCreateRoutingProtocolDirectConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "10.10.100.1/26", "172::1:1/126"),
+				Config: testAccFabricCreateRoutingProtocolDirectConfig("99d6bdc8-206f-4bff-a899-0dba708c03db", "192.168.200.201/30", "172::1:1/126"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemAttr(
-						"equinix_fabric_routingprotocol.test", "direct_ipv4.equinix_iface_ip", fmt.Sprint("10.10.100.1/26")),
+					resource.TestCheckTypeSetElemNestedAttrs("equinix_fabric_routingprotocol.test", "direct_ipv4.*", map[string]string{
+						"equinix_iface_ip": fmt.Sprintf("192.168.200.201/30"),
+					}),
 				),
 				ExpectNonEmptyPlan: true,
 			}, {
-				Config: testAccFabricCreateRoutingProtocolDirectConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "192.168.200.201/26", "172::1:1/126"),
+				Config: testAccFabricCreateRoutingProtocolDirectConfig("99d6bdc8-206f-4bff-a899-0dba708c03db", "192.168.200.201/26", "172::1:1/126"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemAttr(
-						"equinix_fabric_routingprotocol.test", "direct_ipv4.equinix_iface_ip", fmt.Sprint("192.168.200.201/26")),
+					resource.TestCheckTypeSetElemNestedAttrs("equinix_fabric_routingprotocol.test", "direct_ipv4.*", map[string]string{
+						"equinix_iface_ip": fmt.Sprintf("192.168.200.201/26"),
+					}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -57,17 +59,20 @@ func TestAccFabricCreateBgpRoutingProtocol(t *testing.T) {
 		CheckDestroy: checkRoutingProtocolDelete,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricCreateRoutingProtocolBgpConfig("ee52dbd1-2193-4a6b-a869-5121ae739dc9", "180.1.1.2", "172::1:2"),
+				Config: testAccFabricCreateRoutingProtocolBgpConfig("99d6bdc8-206f-4bff-a899-0dba708c03db", "192.168.200.202", "172::1:2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemAttr("equinix_fabric_routingprotocol.test", "bgp_ipv4.customer_peer_ip", fmt.Sprintf("180.1.1.2")),
+					resource.TestCheckTypeSetElemNestedAttrs("equinix_fabric_routingprotocol.test", "bgp_ipv4.*", map[string]string {
+						"customer_peer_ip": fmt.Sprintf("192.168.200.202"),
+					}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccFabricCreateRoutingProtocolBgpConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "180.1.1.3", "172::1:2"),
+				Config: testAccFabricCreateRoutingProtocolBgpConfig("99d6bdc8-206f-4bff-a899-0dba708c03db", "192.168.200.203", "172::1:2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemAttr(
-						"equinix_fabric_routingprotocol.test", "bgp_ipv4.customer_peer_ip", fmt.Sprint("10.10.100.2")),
+					resource.TestCheckTypeSetElemNestedAttrs("equinix_fabric_routingprotocol.test", "bgp_ipv4.*", map[string]string {
+						"customer_peer_ip": fmt.Sprintf("192.168.200.203"),
+					}),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +116,7 @@ func TestAccFabricReadRoutingProtocolByUuid(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFabricReadRoutingProtocolConfig("3d205bfa-1064-4d5b-a199-2908de84999e", "00f48313-ab13-4524-aaad-93c31b5b8848"),
+				Config: testAccFabricReadRoutingProtocolConfig("99d6bdc8-206f-4bff-a899-0dba708c03db", "00f48313-ab13-4524-aaad-93c31b5b8848"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"equinix_fabric_routingprotocol.test", "type", fmt.Sprint("DIRECT")),

@@ -195,11 +195,10 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 	var changeUuid string
 	switch updatedRpResp.Type_ {
 	case "BGP":
-		changeUuid = updatedRpResp.RoutingProtocolBgpData.Uuid
+		changeUuid = updatedRpResp.RoutingProtocolBgpData.Change.Uuid
 	case "DIRECT":
-		changeUuid = updatedRpResp.RoutingProtocolDirectData.Uuid
+		changeUuid = updatedRpResp.RoutingProtocolDirectData.Change.Uuid
 	}
-
 	_, err = waitForRoutingProtocolUpdateCompletion(changeUuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
 		if !strings.Contains(err.Error(), "500") {
