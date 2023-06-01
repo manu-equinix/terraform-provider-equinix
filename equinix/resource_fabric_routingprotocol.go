@@ -132,6 +132,13 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 	//if err != nil {
 	//	return diag.FromErr(fmt.Errorf("error response for the routing protocol update, response %v, error %v", res, err))
 	//}
+	//_, err = waitForRoutingProtocolUpdateCompletion(updatedRp.RespRoutingProtocolBgpData.Uuid., d.Id(), d.Get("connection_uuid").(string), meta, ctx)
+	//if err != nil {
+	//	if !strings.Contains(err.Error(), "500") {
+	//		d.SetId("")
+	//	}
+	//	return diag.FromErr(fmt.Errorf("errored while waiting for successful connection replace update, response %v, error %v", res, err))
+	//}
 
 	schemaBgpIpv4 := d.Get("bgp_ipv4").(*schema.Set).List()
 	bgpIpv4 := routingProtocolBgpIpv4ToFabric(schemaBgpIpv4)
@@ -185,7 +192,15 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 		return diag.FromErr(fmt.Errorf("error response for the routing protocol replace update, response %v, error %v", res, err))
 	}
 
-	_, err = waitForRoutingProtocolUpdateCompletion(updatedRpResp.RoutingProtocolBgpData.Change.Uuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
+	var changeUuid string
+	switch updatedRpResp.Type_ {
+	case "BGP":
+		changeUuid = updatedRpResp.RoutingProtocolBgpData.Uuid
+	case "DIRECT":
+		changeUuid = updatedRpResp.RoutingProtocolDirectData.Uuid
+	}
+
+	_, err = waitForRoutingProtocolUpdateCompletion(changeUuid, d.Id(), d.Get("connection_uuid").(string), meta, ctx)
 	if err != nil {
 		if !strings.Contains(err.Error(), "500") {
 			d.SetId("")
