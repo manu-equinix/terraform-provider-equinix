@@ -46,7 +46,7 @@ func readRoutingProtocolDirectTypeSch() map[string]*schema.Schema {
 		},
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Routing Protocol name. An alpha-numeric 24 characters string which can include only hyphens and underscores",
 		},
 		"direct_ipv4": {
@@ -97,7 +97,7 @@ func readRoutingProtocolBgpTypeSch() map[string]*schema.Schema {
 		},
 		"name": {
 			Type:        schema.TypeString,
-			Required:    true,
+			Optional:    true,
 			Description: "Routing Protocol name. An alpha-numeric 24 characters string which can include only hyphens and underscores",
 		},
 		"bgp_ipv4": {
