@@ -22,10 +22,10 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 			Delete: schema.DefaultTimeout(6 * time.Minute),
 			Read:   schema.DefaultTimeout(6 * time.Minute),
 		},
-		ReadContext:   resourceFabricRoutingProtocolRead,   // get by id
-		CreateContext: resourceFabricRoutingProtocolCreate, // post nonbulk
-		UpdateContext: resourceFabricRoutingProtocolUpdate, // put rp by id
-		DeleteContext: resourceFabricRoutingProtocolDelete, // delete by id
+		ReadContext:   resourceFabricRoutingProtocolRead,
+		CreateContext: resourceFabricRoutingProtocolCreate,
+		UpdateContext: resourceFabricRoutingProtocolUpdate,
+		DeleteContext: resourceFabricRoutingProtocolDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -91,9 +91,15 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 				},
 			},
 		}
-		if bgpIpv4.CustomerPeerIp == "" { createRequest.BgpIpv4 = nil }
-		if bgpIpv6.CustomerPeerIp == "" { createRequest.BgpIpv6 = nil }
-		if bfd.Enabled == false { createRequest.Bfd = nil }
+		if bgpIpv4.CustomerPeerIp == "" {
+			createRequest.BgpIpv4 = nil
+		}
+		if bgpIpv6.CustomerPeerIp == "" {
+			createRequest.BgpIpv6 = nil
+		}
+		if bfd.Enabled == false {
+			createRequest.Bfd = nil
+		}
 	}
 	if d.Get("type").(string) == "DIRECT" {
 		createRequest = v4.RoutingProtocolBase{
@@ -107,8 +113,12 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 				},
 			},
 		}
-		if directIpv4.EquinixIfaceIp == "" { createRequest.DirectIpv4 = nil }
-		if directIpv6.EquinixIfaceIp == "" { createRequest.DirectIpv6 = nil }
+		if directIpv4.EquinixIfaceIp == "" {
+			createRequest.DirectIpv4 = nil
+		}
+		if directIpv6.EquinixIfaceIp == "" {
+			createRequest.DirectIpv6 = nil
+		}
 	}
 	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connection_uuid").(string))
 	if err != nil {
@@ -133,23 +143,11 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
 
-	/* todo: support patch bgp in the future */
-	//update, err := getRoutingProtocolPatchUpdateRequest(dbConn, d)
-	//if err != nil {
-	//	return diag.FromErr(err)
-	//}
-	//updates := []v4.ConnectionChangeOperation{update}
-	//updatedRpResp, res, err := client.RoutingProtocolsApi.PatchConnectionRoutingProtocolByUuid(ctx, updates, d.Id(), d.Get("connection_uuid").(string))
-	//if err != nil {
-	//	return diag.FromErr(fmt.Errorf("error response for the routing protocol update, response %v, error %v", res, err))
-	//}
-	//_, err = waitForRoutingProtocolUpdateCompletion(updatedRp.RespRoutingProtocolBgpData.Uuid., d.Id(), d.Get("connection_uuid").(string), meta, ctx)
-	//if err != nil {
-	//	if !strings.Contains(err.Error(), "500") {
-	//		d.SetId("")
-	//	}
-	//	return diag.FromErr(fmt.Errorf("errored while waiting for successful connection replace update, response %v, error %v", res, err))
-	//}
+	/* todo: support patch bgp in the future - switch between PUT and PATCH
+	1. get getRoutingProtocolPatchUpdateRequest()
+	2. call PatchConnectionRoutingProtocolByUuid() with id and connection_uuid
+	3. waitForRoutingProtocolUpdateCompletion() with change_uuid, id, and connection_uuid
+	*/
 
 	schemaBgpIpv4 := d.Get("bgp_ipv4").(*schema.Set).List()
 	bgpIpv4 := routingProtocolBgpIpv4ToFabric(schemaBgpIpv4)
@@ -183,8 +181,12 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 				},
 			},
 		}
-		if bgpIpv4.CustomerPeerIp == "" { updateRequest.BgpIpv4 = nil }
-		if bgpIpv6.CustomerPeerIp == "" { updateRequest.BgpIpv6 = nil }
+		if bgpIpv4.CustomerPeerIp == "" {
+			updateRequest.BgpIpv4 = nil
+		}
+		if bgpIpv6.CustomerPeerIp == "" {
+			updateRequest.BgpIpv6 = nil
+		}
 	}
 	if d.Get("type").(string) == "DIRECT" {
 		updateRequest = v4.RoutingProtocolBase{
@@ -198,8 +200,12 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 				},
 			},
 		}
-		if directIpv4.EquinixIfaceIp == "" { updateRequest.DirectIpv4 = nil }
-		if directIpv6.EquinixIfaceIp == "" { updateRequest.DirectIpv6 = nil }
+		if directIpv4.EquinixIfaceIp == "" {
+			updateRequest.DirectIpv4 = nil
+		}
+		if directIpv6.EquinixIfaceIp == "" {
+			updateRequest.DirectIpv6 = nil
+		}
 	}
 
 	updatedRpResp, res, err := client.RoutingProtocolsApi.ReplaceConnectionRoutingProtocolByUuid(ctx, updateRequest, d.Id(), d.Get("connection_uuid").(string))
@@ -345,6 +351,7 @@ func waitUntilRoutingProtocolIsDeprovisioned(uuid string, connUuid string, meta 
 		Refresh: func() (interface{}, string, error) {
 			client := meta.(*Config).fabricClient
 			dbConn, resp, _ := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
+			// fixme: check for error code instead?
 			// ignore error for Target
 			return dbConn, strconv.Itoa(resp.StatusCode), nil
 
@@ -353,34 +360,6 @@ func waitUntilRoutingProtocolIsDeprovisioned(uuid string, connUuid string, meta 
 		Delay:      30 * time.Second,
 		MinTimeout: 30 * time.Second,
 	}
-
-	///* check if state is DEPROVISIONED */
-	//stateConf := &resource.StateChangeConf{
-	//	Pending: []string{
-	//		string(v4.DEPROVISIONING_ConnectionState),
-	//	},
-	//	Target: []string{
-	//		string(v4.DEPROVISIONED_ConnectionState),
-	//	},
-	//	Refresh: func() (interface{}, string, error) {
-	//		client := meta.(*Config).fabricClient
-	//		dbConn, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, uuid, connUuid)
-	//		if err != nil {
-	//			return "", "", err
-	//		}
-	//		var state string
-	//		if dbConn.Type_ == "BGP" {
-	//			state = dbConn.RoutingProtocolBgpData.State
-	//		} else if dbConn.Type_ == "DIRECT" {
-	//			state = dbConn.RoutingProtocolDirectData.State
-	//		}
-	//		return dbConn, state, nil
-	//
-	//	},
-	//	Timeout:    5 * time.Minute,
-	//	Delay:      30 * time.Second,
-	//	MinTimeout: 30 * time.Second,
-	//}
 
 	_, err := stateConf.WaitForStateContext(ctx)
 	return err

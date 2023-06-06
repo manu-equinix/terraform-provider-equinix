@@ -12,24 +12,6 @@ func readRoutingProtocolBaseSch() map[string]*schema.Schema {
 			Required:    true,
 			Description: "Routing Protocol configuration type",
 		},
-		//"direct": {
-		//	Type:        schema.TypeSet,
-		//	Required:    true,
-		//	Description: "Routing Protocol configuration for DIRECT",
-		//	Elem: &schema.Resource{
-		//		Schema: createRoutingProtocolDirectTypeSch(),
-		//	},
-		//	ExactlyOneOf: []string{"bgp","direct"},
-		//},
-		//"bgp": {
-		//	Type:        schema.TypeSet,
-		//	Required:    true,
-		//	Description: "Routing Protocol configuration for DIRECT",
-		//	Elem: &schema.Resource{
-		//		Schema: createRoutingProtocolBgpTypeSch(),
-		//	},
-		//	ExactlyOneOf: []string{"bgp","direct"},
-		//},
 	}
 	maps.Copy(rpDataSchema, readRoutingProtocolDirectTypeSch())
 	maps.Copy(rpDataSchema, readRoutingProtocolBgpTypeSch())
