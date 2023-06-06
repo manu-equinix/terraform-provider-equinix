@@ -66,7 +66,7 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 	schemaDirectIpv4 := d.Get("direct_ipv4").(*schema.Set).List()
 	directIpv4 := routingProtocolDirectIpv4ToFabric(schemaDirectIpv4)
 	schemaDirectIpv6 := d.Get("direct_ipv6").(*schema.Set).List()
-	DirectIpv6 := routingProtocolDirectIpv6ToFabric(schemaDirectIpv6)
+	directIpv6 := routingProtocolDirectIpv6ToFabric(schemaDirectIpv6)
 	schemaBfd := d.Get("bfd").(*schema.Set).List()
 	bfd := routingProtocolBfdToFabric(schemaBfd)
 	bgpAuthKey := d.Get("bgp_auth_key")
@@ -91,6 +91,9 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 				},
 			},
 		}
+		if bgpIpv4.CustomerPeerIp == "" { createRequest.BgpIpv4 = nil }
+		if bgpIpv6.CustomerPeerIp == "" { createRequest.BgpIpv6 = nil }
+		if bfd.Enabled == false { createRequest.Bfd = nil }
 	}
 	if d.Get("type").(string) == "DIRECT" {
 		createRequest = v4.RoutingProtocolBase{
@@ -100,10 +103,12 @@ func resourceFabricRoutingProtocolCreate(ctx context.Context, d *schema.Resource
 					Type_:      d.Get("type").(string),
 					Name:       d.Get("name").(string),
 					DirectIpv4: &directIpv4,
-					DirectIpv6: &DirectIpv6,
+					DirectIpv6: &directIpv6,
 				},
 			},
 		}
+		if directIpv4.EquinixIfaceIp == "" { createRequest.DirectIpv4 = nil }
+		if directIpv6.EquinixIfaceIp == "" { createRequest.DirectIpv6 = nil }
 	}
 	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.CreateConnectionRoutingProtocol(ctx, createRequest, d.Get("connection_uuid").(string))
 	if err != nil {
@@ -153,7 +158,7 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 	schemaDirectIpv4 := d.Get("direct_ipv4").(*schema.Set).List()
 	directIpv4 := routingProtocolDirectIpv4ToFabric(schemaDirectIpv4)
 	schemaDirectIpv6 := d.Get("direct_ipv6").(*schema.Set).List()
-	DirectIpv6 := routingProtocolDirectIpv6ToFabric(schemaDirectIpv6)
+	directIpv6 := routingProtocolDirectIpv6ToFabric(schemaDirectIpv6)
 	schemaBfd := d.Get("bfd").(*schema.Set).List()
 	bfd := routingProtocolBfdToFabric(schemaBfd)
 	bgpAuthKey := d.Get("bgp_auth_key")
@@ -178,6 +183,8 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 				},
 			},
 		}
+		if bgpIpv4.CustomerPeerIp == "" { updateRequest.BgpIpv4 = nil }
+		if bgpIpv6.CustomerPeerIp == "" { updateRequest.BgpIpv6 = nil }
 	}
 	if d.Get("type").(string) == "DIRECT" {
 		updateRequest = v4.RoutingProtocolBase{
@@ -187,10 +194,12 @@ func resourceFabricRoutingProtocolUpdate(ctx context.Context, d *schema.Resource
 					Type_:      d.Get("type").(string),
 					Name:       d.Get("name").(string),
 					DirectIpv4: &directIpv4,
-					DirectIpv6: &DirectIpv6,
+					DirectIpv6: &directIpv6,
 				},
 			},
 		}
+		if directIpv4.EquinixIfaceIp == "" { updateRequest.DirectIpv4 = nil }
+		if directIpv6.EquinixIfaceIp == "" { updateRequest.DirectIpv6 = nil }
 	}
 
 	updatedRpResp, res, err := client.RoutingProtocolsApi.ReplaceConnectionRoutingProtocolByUuid(ctx, updateRequest, d.Id(), d.Get("connection_uuid").(string))
