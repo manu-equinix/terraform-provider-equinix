@@ -27,7 +27,18 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 		UpdateContext: resourceFabricRoutingProtocolUpdate,
 		DeleteContext: resourceFabricRoutingProtocolDelete,
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			// Custom state context function, to parse import argument as  connection_uuid/rp_uuid
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				parts := strings.SplitN(d.Id(), "/", 2)
+				if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+					return nil, fmt.Errorf("unexpected format of ID (%s), expected <conn-uuid>/<rp-uuid>", d.Id())
+				}
+				connectionUuid, uuid := parts[0], parts[1]
+				// set set connection uuid and rp uuid as overall id of resource
+				_ = d.Set("connection_uuid", connectionUuid)
+				d.SetId(uuid)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Schema: createFabricRoutingProtocolResourceSchema(),
 
@@ -38,6 +49,7 @@ func resourceFabricRoutingProtocol() *schema.Resource {
 func resourceFabricRoutingProtocolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Config).fabricClient
 	ctx = context.WithValue(ctx, v4.ContextAccessToken, meta.(*Config).FabricAuthToken)
+	log.Printf("[WARN] Routing Protocol Connection uuid: %s", d.Get("connection_uuid").(string))
 	fabricRoutingProtocol, _, err := client.RoutingProtocolsApi.GetConnectionRoutingProtocolByUuid(ctx, d.Id(), d.Get("connection_uuid").(string))
 	if err != nil {
 		log.Printf("[WARN] Routing Protocol %s not found , error %s", d.Id(), err)
